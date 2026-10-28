@@ -22,13 +22,13 @@ void main() {
   testWidgets('empty form shows field errors and does not sign in', (
     tester,
   ) async {
-    final auth = await pumpMosApp(tester);
+    final container = await pumpMosApp(tester);
     await tester.tap(find.text('Sign in'));
     await tester.pumpAndSettle();
 
     expect(find.text('Enter your email or phone number.'), findsOneWidget);
     expect(find.text('Enter your password.'), findsOneWidget);
-    expect(auth.hasSession, isFalse);
+    expect(container.read(authControllerProvider).hasSession, isFalse);
   });
 
   testWidgets('TC-04: wrong password shows an error and stays on login', (
@@ -59,13 +59,13 @@ void main() {
   });
 
   testWidgets('correct details sign in and land on Home', (tester) async {
-    final auth = await pumpMosApp(tester);
+    final container = await pumpMosApp(tester);
     await tester.enterText(emailField(), 'dara@example.com');
     await tester.enterText(passwordField(), MockAuthRepository.demoPassword);
     await tester.tap(find.text('Sign in'));
     await tester.pumpAndSettle();
 
-    expect(auth.status, SessionStatus.customer);
+    expect(container.read(authControllerProvider).isCustomer, isTrue);
     expect(find.byType(LoginScreen), findsNothing);
     expect(find.byType(NavigationBar), findsOneWidget);
   });
@@ -73,11 +73,11 @@ void main() {
   testWidgets('TC-01: continue as guest goes to Home without logging in', (
     tester,
   ) async {
-    final auth = await pumpMosApp(tester);
+    final container = await pumpMosApp(tester);
     await tester.tap(find.text('Continue as guest'));
     await tester.pumpAndSettle();
 
-    expect(auth.isGuest, isTrue);
+    expect(container.read(authControllerProvider).isGuest, isTrue);
     expect(find.byType(LoginScreen), findsNothing);
     expect(find.byType(NavigationBar), findsOneWidget);
   });

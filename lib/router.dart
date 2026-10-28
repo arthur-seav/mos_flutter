@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'features/account/profile_screen.dart';
@@ -17,22 +19,23 @@ abstract final class AppRoutes {
   static const profile = '/profile';
 }
 
-/// Owns the app's [GoRouter].
+/// The app's [GoRouter].
 ///
-/// The router listens to [AuthController]: with no session it always shows
-/// the login page; once the user signs in or continues as a guest it moves
-/// on to Home. Screens therefore never navigate after login themselves.
-class AppRouter {
-  AppRouter(this._auth);
+/// It follows [authControllerProvider]: with no session it always shows the
+/// login page; once the user signs in or continues as a guest it moves on to
+/// Home. Screens therefore never navigate after login themselves.
+final routerProvider = Provider<GoRouter>((ref) {
+  // go_router wants a Listenable to know when to re-check `redirect`.
+  // This one changes whenever the session does.
+  final session = ValueNotifier<AuthState>(ref.read(authControllerProvider));
+  ref.listen(authControllerProvider, (_, next) => session.value = next);
 
-  final AuthController _auth;
-
-  late final GoRouter config = GoRouter(
+  final router = GoRouter(
     initialLocation: AppRoutes.login,
-    refreshListenable: _auth,
+    refreshListenable: session,
     redirect: (context, state) {
       final onLogin = state.matchedLocation == AppRoutes.login;
-      if (!_auth.hasSession) return onLogin ? null : AppRoutes.login;
+      if (!session.value.hasSession) return onLogin ? null : AppRoutes.login;
       if (onLogin) return AppRoutes.home;
       return null;
     },
@@ -80,4 +83,10 @@ class AppRouter {
       ),
     ],
   );
-}
+
+  ref.onDispose(() {
+    router.dispose();
+    session.dispose();
+  });
+  return router;
+});

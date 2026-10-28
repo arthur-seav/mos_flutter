@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/forms/submit_state.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/validators.dart';
+import '../../core/widgets/error_banner.dart';
 import '../../core/widgets/labeled_text_field.dart';
+import '../../core/widgets/loading_button.dart';
 import '../../core/widgets/or_divider.dart';
 import 'auth_controller.dart';
 import 'widgets/brand_header.dart';
@@ -12,16 +15,17 @@ import 'widgets/brand_header.dart';
 /// SA 2.0 §4.2.1.1 Login (Figma: 1.1_Login).
 ///
 /// Customers sign in, or continue as a guest (FR-01, FR-03).
-/// Where to go next is decided by the router: once [AuthController] has a
-/// session, the router leaves this page by itself.
-class LoginScreen extends StatefulWidget {
+/// Where to go next is decided by the router: once [authControllerProvider]
+/// has a session, the router leaves this page by itself.
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen>
+    with SubmitStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _identifierController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -34,12 +38,15 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signIn() async {
-    final auth = context.read<AuthController>();
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
-    await auth.signIn(
-      identifier: _identifierController.text,
-      password: _passwordController.text,
+    await runSubmit(
+      () => ref
+          .read(authControllerProvider.notifier)
+          .signIn(
+            identifier: _identifierController.text,
+            password: _passwordController.text,
+          ),
     );
   }
 
@@ -53,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthController>();
+    final error = submitError;
 
     return Scaffold(
       body: SafeArea(
@@ -91,8 +98,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               AutofillHints.telephoneNumber,
                             ],
                             validator: validateEmailOrPhone,
-                            onChanged: (_) => auth.clearError(),
-                            enabled: !auth.isBusy,
+                            onChanged: (_) => clearSubmitError(),
+                            enabled: !isSubmitting,
                           ),
                           const SizedBox(height: 20),
                           LabeledTextField(
@@ -104,9 +111,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             textInputAction: TextInputAction.done,
                             autofillHints: const [AutofillHints.password],
                             validator: validateRequiredPassword,
-                            onChanged: (_) => auth.clearError(),
+                            onChanged: (_) => clearSubmitError(),
                             onFieldSubmitted: (_) => _signIn(),
-                            enabled: !auth.isBusy,
+                            enabled: !isSubmitting,
                           ),
                         ],
                       ),
@@ -121,28 +128,25 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-                    if (auth.errorMessage != null) ...[
+                    if (error != null) ...[
                       const SizedBox(height: 8),
-                      _ErrorBanner(message: auth.errorMessage!),
+                      ErrorBanner(message: error),
                     ],
                     const SizedBox(height: 20),
-                    FilledButton(
-                      onPressed: auth.isBusy ? null : _signIn,
-                      child: auth.isBusy
-                          ? const SizedBox.square(
-                              dimension: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                color: AppColors.onBrand,
-                              ),
-                            )
-                          : const Text('Sign in'),
+                    LoadingButton(
+                      label: 'Sign in',
+                      isLoading: isSubmitting,
+                      onPressed: _signIn,
                     ),
                     const SizedBox(height: 20),
                     const OrDivider(),
                     const SizedBox(height: 20),
                     OutlinedButton(
-                      onPressed: auth.isBusy ? null : auth.continueAsGuest,
+                      onPressed: isSubmitting
+                          ? null
+                          : ref
+                                .read(authControllerProvider.notifier)
+                                .continueAsGuest,
                       child: const Text('Continue as guest'),
                     ),
                   ],
@@ -163,36 +167,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ErrorBanner extends StatelessWidget {
-  const _ErrorBanner({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.danger.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.error_outline, color: AppColors.danger, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: AppTextStyles.body.copyWith(color: AppColors.danger),
-            ),
-          ),
-        ],
       ),
     );
   }
