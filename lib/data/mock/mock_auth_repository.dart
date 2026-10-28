@@ -1,4 +1,4 @@
-import '../../core/utils/validators.dart';
+import '../../utils/validators.dart';
 import '../models/sign_up_request.dart';
 import '../models/user.dart';
 import '../repositories/auth_repository.dart';
