@@ -9,6 +9,8 @@ import '../repositories/menu_repository.dart';
 /// The demo menu, based on the Figma screens and the SA test cases.
 ///
 /// Mocha is sold out so TC-09 can be shown without the staff dashboard.
+/// [markSoldOut] stands in for staff marking a drink sold out (FR-22),
+/// for TC-17.
 /// Drink options follow the test cases: Espresso is hot only (TC-10),
 /// Caramel Latte has the Figma defaults (TC-11), Americano has no default
 /// size (TC-12) and its own Large price (TC-15), Latte is $3.00 with
@@ -17,6 +19,25 @@ class MockMenuRepository implements MenuRepository {
   MockMenuRepository({this.latency = const Duration(milliseconds: 600)});
 
   final Duration latency;
+
+  /// Sold out today. Starts with Mocha (TC-09).
+  final Set<int> _soldOutIds = {5};
+
+  /// What staff do on the dashboard (FR-22). Demo and tests only.
+  void markSoldOut(int productId) => _soldOutIds.add(productId);
+
+  Product _withStock(Product p) => Product(
+    id: p.id,
+    categoryId: p.categoryId,
+    name: p.name,
+    description: p.description,
+    imageUrl: p.imageUrl,
+    basePrice: p.basePrice,
+    isAvailable: !_soldOutIds.contains(p.id),
+    isActive: p.isActive,
+  );
+
+  List<Product> get _stocked => _products.map(_withStock).toList();
 
   static const coffee = 1, tea = 2, frappe = 3, nonCoffee = 4;
 
@@ -32,14 +53,7 @@ class MockMenuRepository implements MenuRepository {
     _p(2, coffee, 'Americano', 2.50, 'Espresso topped with hot water'),
     _p(3, coffee, 'Cappuccino', 3.20, 'Espresso, steamed milk, thick foam'),
     _p(4, coffee, 'Caramel Latte', 3.50, 'Espresso, steamed milk, caramel'),
-    _p(
-      5,
-      coffee,
-      'Mocha',
-      3.60,
-      'Espresso, chocolate, steamed milk',
-      available: false,
-    ),
+    _p(5, coffee, 'Mocha', 3.60, 'Espresso, chocolate, steamed milk'),
     _p(6, coffee, 'Flat White', 3.40, 'Ristretto with velvety microfoam'),
     _p(18, coffee, 'Latte', 3.00, 'Espresso with plenty of steamed milk'),
     _p(7, tea, 'Jasmine Green Tea', 2.20, 'Light, floral green tea'),
@@ -71,7 +85,6 @@ class MockMenuRepository implements MenuRepository {
     String name,
     double price,
     String description, {
-    bool available = true,
     bool active = true,
   }) => Product(
     id: id,
@@ -79,20 +92,19 @@ class MockMenuRepository implements MenuRepository {
     name: name,
     description: description,
     basePrice: Money.dollars(price),
-    isAvailable: available,
     isActive: active,
   );
 
   @override
   Future<MenuCatalog> fetchMenu() async {
     await Future<void>.delayed(latency);
-    return MenuCatalog(categories: _categories, products: _products);
+    return MenuCatalog(categories: _categories, products: _stocked);
   }
 
   @override
   Future<List<Product>> fetchPopular({int limit = 6}) async {
     await Future<void>.delayed(latency);
-    final byId = {for (final p in _products) p.id: p};
+    final byId = {for (final p in _stocked) p.id: p};
     return _popularIds
         .map((id) => byId[id]!)
         .where((p) => p.isActive)
@@ -293,7 +305,7 @@ class MockMenuRepository implements MenuRepository {
   @override
   Future<ProductCustomization> fetchCustomization(int productId) async {
     await Future<void>.delayed(latency);
-    final product = _products
+    final product = _stocked
         .where((p) => p.id == productId && p.isActive)
         .firstOrNull;
     if (product == null) throw StateError('No drink with id $productId');
@@ -301,5 +313,17 @@ class MockMenuRepository implements MenuRepository {
       product: product,
       groups: _groupsFor(productId),
     );
+  }
+
+  @override
+  Future<Set<int>> fetchUnavailable(Iterable<int> productIds) async {
+    await Future<void>.delayed(latency);
+    final byId = {for (final p in _stocked) p.id: p};
+    bool canOrder(int id) =>
+        byId[id] != null && byId[id]!.isActive && byId[id]!.isAvailable;
+    return {
+      for (final id in productIds)
+        if (!canOrder(id)) id,
+    };
   }
 }

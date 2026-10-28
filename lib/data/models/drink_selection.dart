@@ -28,6 +28,31 @@ class DrinkSelection {
     );
   }
 
+  /// "Edit options" from the cart: starts with the line's options and
+  /// quantity. Groups the line has nothing for (e.g. ice level of a hot
+  /// drink) keep their defaults. Prices come from [customization], so an
+  /// edited line gets today's prices.
+  factory DrinkSelection.fromCartItem(
+    ProductCustomization customization,
+    CartItem item,
+  ) {
+    final initial = DrinkSelection.initial(customization);
+    final chosen = Map.of(initial.chosen);
+    for (final g in customization.groups) {
+      final ids = [
+        for (final o in item.options)
+          if (o.groupId == g.group.id && g.optionById(o.id) != null) o.id,
+      ];
+      if (ids.isNotEmpty) chosen[g.group.id] = ids;
+    }
+    return DrinkSelection._(
+      customization: customization,
+      chosen: chosen,
+      quantity: item.quantity.clamp(1, maxQuantity),
+    );
+  }
+
+  /// The most of one drink in one cart line.
   static const maxQuantity = 20;
 
   final ProductCustomization customization;

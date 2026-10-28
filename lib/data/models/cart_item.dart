@@ -13,7 +13,13 @@ class CartItem {
     required this.options,
     required this.quantity,
     List<String>? optionLabels,
+    this.lineId = 0,
   }) : _optionLabels = optionLabels;
+
+  /// Which cart line this is, given by [CartController] when the drink is
+  /// added. Stays the same when the quantity or options change, so the
+  /// cart page can edit or remove the right line. 0 = not in the cart yet.
+  final int lineId;
 
   final Product product;
   final List<DrinkOption> options;
@@ -48,5 +54,14 @@ class CartItem {
     options: options,
     optionLabels: _optionLabels,
     quantity: value,
+    lineId: lineId,
+  );
+
+  CartItem withLineId(int value) => CartItem(
+    product: product,
+    options: options,
+    optionLabels: _optionLabels,
+    quantity: quantity,
+    lineId: value,
   );
 }

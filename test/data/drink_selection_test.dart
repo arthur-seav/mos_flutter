@@ -120,6 +120,27 @@ void main() {
     expect(s.toCartItem().optionSummary, 'Medium · Iced · Less ice · No sugar');
   });
 
+  test('"Edit options" starts from the cart line', () async {
+    var s = await open(caramelLatte);
+    s = pick(s, 'Temperature', 'Hot');
+    s = pick(s, 'Add-ons', 'Oat milk').withQuantity(2);
+    final line = s.toCartItem();
+
+    final edit = DrinkSelection.fromCartItem(s.customization, line);
+    expect(edit.chosenOptions.map((o) => o.name), [
+      'Medium',
+      'Hot',
+      'Regular',
+      'Oat milk',
+    ]);
+    expect(edit.quantity, 2);
+    // Ice level was hidden; back to Iced, it shows its default again.
+    expect(
+      pick(edit, 'Temperature', 'Iced').chosenOptions.map((o) => o.name),
+      contains('Less'),
+    );
+  });
+
   test('quantity stays between 1 and 20', () async {
     final s = await open(latte);
     expect(s.withQuantity(0).quantity, 1);
