@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/data/mock/mock_auth_repository.dart';
-import 'package:mos_app/features/auth/auth_controller.dart';
-import 'package:mos_app/features/auth/login_screen.dart';
+import 'package:mos_app/features/auth/controllers/auth_controller.dart';
+import 'package:mos_app/features/auth/screens/login_screen.dart';
 
-import '../../helpers.dart';
+import '../../../helpers.dart';
 
 void main() {
   Finder emailField() => find.byType(TextFormField).at(0);

@@ -3,9 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/data/mock/mock_auth_repository.dart';
 import 'package:mos_app/data/models/sign_up_request.dart';
 import 'package:mos_app/data/repositories/auth_repository.dart';
-import 'package:mos_app/features/auth/auth_controller.dart';
+import 'package:mos_app/features/auth/controllers/auth_controller.dart';
 
-import '../../helpers.dart';
+import '../../../helpers.dart';
 
 void main() {
   late ProviderContainer container;

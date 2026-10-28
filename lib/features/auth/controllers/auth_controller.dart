@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/models/sign_up_request.dart';
-import '../../data/models/user.dart';
-import '../../data/repositories/auth_repository.dart';
-import '../../data/repository_providers.dart';
+import '../../../data/models/sign_up_request.dart';
+import '../../../data/models/user.dart';
+import '../../../data/repositories/auth_repository.dart';
+import '../../../data/repository_providers.dart';
 
 /// Who is using the app right now.
 enum SessionStatus {

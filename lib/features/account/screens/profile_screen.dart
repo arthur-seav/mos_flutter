@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_text_styles.dart';
-import '../../core/widgets/placeholder_page.dart';
-import '../auth/auth_controller.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/placeholder_page.dart';
+import '../../auth/controllers/auth_controller.dart';
 
 /// Placeholder until the Account step. For now it only shows who is signed
 /// in and lets them sign out (FR-03), so the login flow can be tried again.

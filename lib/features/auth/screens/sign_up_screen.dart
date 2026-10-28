@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/forms/submit_state.dart';
-import '../../core/utils/validators.dart';
-import '../../core/widgets/error_banner.dart';
-import '../../core/widgets/labeled_text_field.dart';
-import '../../core/widgets/loading_button.dart';
-import '../../data/models/sign_up_request.dart';
-import 'auth_controller.dart';
-import 'widgets/auth_back_button.dart';
-import 'widgets/auth_footer_link.dart';
-import 'widgets/auth_status_view.dart';
-import 'widgets/auth_title.dart';
+import '../../../core/forms/submit_state.dart';
+import '../../../core/utils/validators.dart';
+import '../../../core/widgets/error_banner.dart';
+import '../../../core/widgets/labeled_text_field.dart';
+import '../../../core/widgets/loading_button.dart';
+import '../../../data/models/sign_up_request.dart';
+import '../controllers/auth_controller.dart';
+import '../widgets/auth_back_button.dart';
+import '../widgets/auth_footer_link.dart';
+import '../widgets/auth_status_view.dart';
+import '../widgets/auth_title.dart';
 
 /// SA 2.0 §4.2.1.2 Sign Up (Figma: 1.2_Sign-Up, 1.2_Sign-Up_Success).
 ///
@@ -46,15 +46,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
 
   String? _nullIfEmpty(TextEditingController c) =>
       c.text.trim().isEmpty ? null : c.text.trim();
-
-  /// FR-02 asks for an email **or** a phone number, so each field is
-  /// optional on its own but not both.
-  String? _validateEmail(String? value) {
-    final bothEmpty =
-        (value?.trim().isEmpty ?? true) && _phoneController.text.trim().isEmpty;
-    if (bothEmpty) return 'Enter an email or a phone number.';
-    return validateOptionalEmail(value);
-  }
 
   Future<void> _createAccount() async {
     FocusScope.of(context).unfocus();
@@ -129,7 +120,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                             keyboardType: TextInputType.emailAddress,
                             textInputAction: TextInputAction.next,
                             autofillHints: const [AutofillHints.email],
-                            validator: _validateEmail,
+                            validator: (value) => validateSignUpEmail(
+                              value,
+                              phone: _phoneController.text,
+                            ),
                             onChanged: (_) => clearSubmitError(),
                             enabled: !isSubmitting,
                           ),

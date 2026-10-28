@@ -49,11 +49,13 @@ lib/
 │   ├── repositories/    # abstract interfaces the UI depends on (NFR-09)
 │   ├── mock/            # in-memory implementations used until the backend exists
 │   └── repository_providers.dart
-└── features/
-    ├── auth/            # login, sign up, forgot / reset password + AuthController
-    ├── shell/           # bottom navigation (Home / Menu / Orders / Profile)
-    ├── home/  menu/  orders/  account/
+└── features/<feature>/
+    ├── controllers/     # logic: Riverpod providers / Notifiers (no widgets)
+    ├── screens/         # full pages; they only read controllers and draw
+    └── widgets/         # pieces used by this feature's screens
 ```
+
+Features: `auth` (login, sign up, forgot / reset password), `shell` (bottom navigation), `home`, `menu`, `orders`, `account`.
 
 ### How the layers talk
 
@@ -90,18 +92,6 @@ All use the password `password123`. Accounts you create and passwords you reset 
 | `staff@mos.coffee` | Staff, refused: staff use the admin dashboard (FR-05) |
 
 To try **Forgot password**, use `012 345 678` or `098 765 432`; any other number gives "Account not found." (TC-06).
-
-## Screenshots
-
-Left: Figma. Right: app.
-
-| Login | Sign up |
-|---|---|
-| ![](docs/screenshots/login-vs-figma.png) | ![](docs/screenshots/signup-vs-figma.png) |
-
-| Forgot password: not found (TC-06) | Verifying | New password |
-|---|---|---|
-| ![](docs/screenshots/forgot-not-found-vs-figma.png) | ![](docs/screenshots/verifying-vs-figma.png) | ![](docs/screenshots/reset-vs-figma.png) |
 
 ## Fonts
 

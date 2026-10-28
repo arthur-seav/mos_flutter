@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app_routes.dart';
+import '../../../app_routes.dart';
 
-import '../../core/forms/submit_state.dart';
-import '../../core/utils/validators.dart';
-import '../../core/widgets/error_banner.dart';
-import '../../core/widgets/labeled_text_field.dart';
-import '../../core/widgets/loading_button.dart';
-import '../../core/widgets/or_divider.dart';
-import 'auth_controller.dart';
-import 'widgets/auth_footer_link.dart';
-import 'widgets/auth_title.dart';
-import 'widgets/brand_header.dart';
+import '../../../core/forms/submit_state.dart';
+import '../../../core/utils/validators.dart';
+import '../../../core/widgets/error_banner.dart';
+import '../../../core/widgets/labeled_text_field.dart';
+import '../../../core/widgets/loading_button.dart';
+import '../../../core/widgets/or_divider.dart';
+import '../controllers/auth_controller.dart';
+import '../widgets/auth_footer_link.dart';
+import '../widgets/auth_title.dart';
+import '../widgets/brand_header.dart';
 
 /// SA 2.0 §4.2.1.1 Login (Figma: 1.1_Login).
 ///

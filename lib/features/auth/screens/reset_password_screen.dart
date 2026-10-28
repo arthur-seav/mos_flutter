@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app_routes.dart';
-import '../../core/forms/submit_state.dart';
-import '../../core/utils/validators.dart';
-import '../../core/widgets/error_banner.dart';
-import '../../core/widgets/labeled_text_field.dart';
-import '../../core/widgets/loading_button.dart';
-import '../../data/repositories/auth_repository.dart';
-import 'auth_controller.dart';
-import 'widgets/auth_back_button.dart';
-import 'widgets/auth_status_view.dart';
-import 'widgets/auth_title.dart';
+import '../../../app_routes.dart';
+import '../../../core/forms/submit_state.dart';
+import '../../../core/utils/validators.dart';
+import '../../../core/widgets/error_banner.dart';
+import '../../../core/widgets/labeled_text_field.dart';
+import '../../../core/widgets/loading_button.dart';
+import '../../../data/repositories/auth_repository.dart';
+import '../controllers/auth_controller.dart';
+import '../widgets/auth_back_button.dart';
+import '../widgets/auth_status_view.dart';
+import '../widgets/auth_title.dart';
 
 /// SA 2.0 §4.2.1.3, step 2 (Figma: 1.3_Reset-Password,
 /// 1.3_Reset-Password_Success).
@@ -44,12 +44,6 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
     _passwordController.dispose();
     _confirmController.dispose();
     super.dispose();
-  }
-
-  String? _validateConfirm(String? value) {
-    if (value == null || value.isEmpty) return 'Type the new password again.';
-    if (value != _passwordController.text) return 'Passwords do not match.';
-    return null;
   }
 
   Future<void> _reset() async {
@@ -117,7 +111,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
                       icon: Icons.lock_outline,
                       obscureText: true,
                       textInputAction: TextInputAction.done,
-                      validator: _validateConfirm,
+                      validator: (value) => validatePasswordConfirmation(
+                        value,
+                        password: _passwordController.text,
+                      ),
                       onChanged: (_) => clearSubmitError(),
                       onFieldSubmitted: (_) => _reset(),
                       enabled: !isSubmitting,

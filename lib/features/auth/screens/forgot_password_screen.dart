@@ -2,22 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app_routes.dart';
-import '../../core/utils/validators.dart';
-import '../../core/widgets/labeled_text_field.dart';
-import '../../data/repositories/auth_repository.dart';
-import 'auth_controller.dart';
-import 'widgets/auth_back_button.dart';
-import 'widgets/auth_status_view.dart';
-import 'widgets/auth_title.dart';
+import '../../../app_routes.dart';
+import '../../../core/utils/validators.dart';
+import '../../../core/widgets/labeled_text_field.dart';
+import '../controllers/account_verification_controller.dart';
+import '../widgets/auth_back_button.dart';
+import '../widgets/auth_status_view.dart';
+import '../widgets/auth_title.dart';
 
 /// SA 2.0 §4.2.1.3, step 1 (Figma: 1.3_input acc info to verify,
 /// 1.3_Verify Account before reset password, 1.3_verify Account failed).
 ///
-/// The customer enters their phone number; the app checks that an account
-/// uses it before going to the new-password page. While checking, a
-/// "Verifying account..." page with a Cancel button is shown.
-/// An unknown number shows "Account not found." under the field (TC-06).
+/// The customer enters their phone number; [AccountVerificationController]
+/// checks it. This screen only draws the controller's state: the form, the
+/// "Verifying account..." page, or the error under the field. Once verified,
+/// it opens the new-password page.
 ///
 /// The SA plans an OTP step here once the app is in production.
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -32,57 +31,40 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
 
-  bool _verifying = false;
-  String? _phoneError;
-
-  /// Increases on every attempt and on Cancel, so the answer to a
-  /// cancelled attempt is ignored when it arrives later.
-  int _attempt = 0;
-
   @override
   void dispose() {
     _phoneController.dispose();
     super.dispose();
   }
 
-  Future<void> _verify() async {
+  AccountVerificationController get _controller =>
+      ref.read(accountVerificationProvider.notifier);
+
+  void _verify() {
     FocusScope.of(context).unfocus();
-    setState(() => _phoneError = null);
+    _controller.reset();
     if (!_formKey.currentState!.validate()) return;
-
-    final attempt = ++_attempt;
-    setState(() => _verifying = true);
-    try {
-      final ticket = await ref
-          .read(authControllerProvider.notifier)
-          .verifyAccountForReset(phone: _phoneController.text);
-      if (!mounted || attempt != _attempt) return;
-      setState(() => _verifying = false);
-      context.push(AppRoutes.resetPassword, extra: ticket);
-    } on AuthException catch (e) {
-      if (!mounted || attempt != _attempt) return;
-      setState(() {
-        _verifying = false;
-        _phoneError = e.message;
-      });
-    }
-  }
-
-  void _cancel() {
-    setState(() {
-      _attempt++;
-      _verifying = false;
-    });
+    _controller.verify(_phoneController.text);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_verifying) {
+    final verification = ref.watch(accountVerificationProvider);
+
+    ref.listen(accountVerificationProvider, (previous, next) {
+      final ticket = next.ticket;
+      if (ticket != null && previous?.ticket == null) {
+        context.push(AppRoutes.resetPassword, extra: ticket);
+        _controller.reset();
+      }
+    });
+
+    if (verification.isVerifying) {
       return Scaffold(
         body: AuthStatusView.loading(
           message: 'Verifying account...',
           action: OutlinedButton(
-            onPressed: _cancel,
+            onPressed: _controller.cancel,
             child: const Text('Cancel'),
           ),
         ),
@@ -112,10 +94,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 textInputAction: TextInputAction.done,
                 autofillHints: const [AutofillHints.telephoneNumber],
                 validator: validatePhone,
-                errorText: _phoneError,
-                onChanged: (_) {
-                  if (_phoneError != null) setState(() => _phoneError = null);
-                },
+                errorText: verification.errorMessage,
+                onChanged: (_) => _controller.reset(),
                 onFieldSubmitted: (_) => _verify(),
               ),
               const SizedBox(height: 24),

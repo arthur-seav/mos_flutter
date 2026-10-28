@@ -47,6 +47,40 @@ void main() {
     });
   });
 
+  group('validateSignUpEmail (FR-02: email or phone)', () {
+    test('both empty is refused', () {
+      expect(
+        validateSignUpEmail('', phone: ' '),
+        'Enter an email or a phone number.',
+      );
+    });
+
+    test('phone only is fine', () {
+      expect(validateSignUpEmail('', phone: '012345678'), isNull);
+    });
+
+    test('an email, if typed, must be valid', () {
+      expect(validateSignUpEmail('dara@', phone: '012345678'), isNotNull);
+    });
+  });
+
+  group('validatePasswordConfirmation', () {
+    test('must not be empty', () {
+      expect(
+        validatePasswordConfirmation('', password: 'abc'),
+        'Type the new password again.',
+      );
+    });
+
+    test('must match', () {
+      expect(
+        validatePasswordConfirmation('abd', password: 'abc'),
+        'Passwords do not match.',
+      );
+      expect(validatePasswordConfirmation('abc', password: 'abc'), isNull);
+    });
+  });
+
   test('validateRequiredPassword', () {
     expect(validateRequiredPassword(''), 'Enter your password.');
     expect(validateRequiredPassword('x'), isNull);
