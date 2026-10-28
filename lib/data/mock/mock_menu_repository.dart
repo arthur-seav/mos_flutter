@@ -124,6 +124,7 @@ class MockMenuRepository implements MenuRepository {
     isRequired: true,
     maxSelect: 1,
     needsIcedDrink: true,
+    summaryNoun: 'ice',
   );
   static const _sweetness = OptionGroup(
     id: 4,
@@ -131,6 +132,7 @@ class MockMenuRepository implements MenuRepository {
     selectionType: SelectionType.single,
     isRequired: true,
     maxSelect: 1,
+    summaryNoun: 'sugar',
   );
   static const _addOns = OptionGroup(
     id: 5,
@@ -174,12 +176,12 @@ class MockMenuRepository implements MenuRepository {
       DrinkOption(id: extraIce, groupId: 3, name: 'Extra'),
     ],
     _sweetness: const [
-      // Words instead of percentages. Each name says "sugar", so a cart
-      // line like "Iced · Less · Regular sugar" is clear on its own.
+      // Words instead of percentages, short like the ice level names.
+      // Cart lines add "sugar" (see OptionGroup.summaryNoun).
       DrinkOption(id: noSugar, groupId: 4, name: 'No sugar'),
-      DrinkOption(id: lessSugar, groupId: 4, name: 'Less sugar'),
-      DrinkOption(id: normalSugar, groupId: 4, name: 'Regular sugar'),
-      DrinkOption(id: 404, groupId: 4, name: 'Extra sugar'),
+      DrinkOption(id: lessSugar, groupId: 4, name: 'Less'),
+      DrinkOption(id: normalSugar, groupId: 4, name: 'Regular'),
+      DrinkOption(id: 404, groupId: 4, name: 'Extra'),
     ],
     _addOns: [
       DrinkOption(

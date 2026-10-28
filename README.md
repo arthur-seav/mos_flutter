@@ -112,6 +112,7 @@ To try **Forgot password**, use `012 345 678` or `098 765 432`; any other number
 ## Open questions for the SA document
 
 - **Ice level for hot drinks (BR-01).** The data dictionary has no way to say "this group only applies to iced drinks". The app adds two fields: `OptionGroup.needsIcedDrink` (true for Ice level) and `DrinkOption.isIced` (true for Iced). The backend needs the same, or a fixed rule.
+- **Short option names in cart lines.** Ice level and sweetness both use "Less / Regular / Extra". The app adds `OptionGroup.summaryNoun` ("ice", "sugar") so cart and order lines read "Less ice · Regular sugar".
 - **Options a drink does not offer (TC-10: Espresso is Hot only).** `product_options` is described as a price override only. The app also reads it as "the options this drink offers" when a drink has rows for a group.
 
 ## Fonts

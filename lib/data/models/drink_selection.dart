@@ -130,6 +130,12 @@ class DrinkSelection {
   CartItem toCartItem() => CartItem(
     product: customization.product,
     options: chosenOptions,
+    optionLabels: [
+      for (final g in visibleGroups)
+        for (final id in chosen[g.group.id] ?? const <int>[])
+          if (g.optionById(id) case final option?)
+            g.group.summaryNameOf(option),
+    ],
     quantity: quantity,
   );
 }

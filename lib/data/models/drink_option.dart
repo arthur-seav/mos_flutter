@@ -15,6 +15,7 @@ class OptionGroup {
     required this.isRequired,
     required this.maxSelect,
     this.needsIcedDrink = false,
+    this.summaryNoun,
   });
 
   final int id;
@@ -32,7 +33,22 @@ class OptionGroup {
   /// README "Open questions".
   final bool needsIcedDrink;
 
+  /// Added after short option names in cart and order lines, so
+  /// "Less" reads "Less ice" or "Less sugar". Null = names stand alone
+  /// ("Medium", "Oat milk"). Not in the SA data dictionary yet.
+  final String? summaryNoun;
+
   bool get isMultiple => selectionType == SelectionType.multiple;
+
+  /// "Less" -> "Less sugar"; "No sugar" stays as it is.
+  String summaryNameOf(DrinkOption option) {
+    final noun = summaryNoun;
+    if (noun == null) return option.name;
+    if (option.name.toLowerCase().contains(noun.toLowerCase())) {
+      return option.name;
+    }
+    return '${option.name} $noun';
+  }
 }
 
 /// One choice in a group (data dictionary: `options`), with the price for

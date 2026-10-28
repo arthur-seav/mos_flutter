@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/controllers/cart/cart_controller.dart';
 import 'package:mos_app/screens/menu/customize_drink_screen.dart';
 import 'package:mos_app/widgets/common/selectable_pill.dart';
+import 'package:mos_app/widgets/menu/option_group_section.dart';
 
 import '../../helpers.dart';
 
@@ -25,6 +26,12 @@ void main() {
   }
 
   Finder pill(String label) => find.widgetWithText(SelectablePill, label);
+
+  /// For labels used by two groups ("Less", "Regular", "Extra").
+  Finder pillIn(String group, String label) => find.descendant(
+    of: find.widgetWithText(OptionGroupSection, group),
+    matching: pill(label),
+  );
 
   Future<void> tapPill(WidgetTester tester, String label) async {
     await tester.ensureVisible(pill(label));
@@ -49,9 +56,13 @@ void main() {
     tester,
   ) async {
     await openDrink(tester, 'Caramel Latte');
-    for (final label in [r'Medium +$0.50', 'Iced', 'Less', 'Regular sugar']) {
+    for (final label in [r'Medium +$0.50', 'Iced']) {
       expect(isSelected(tester, label), isTrue, reason: label);
     }
+    bool selectedIn(String group, String label) =>
+        tester.widget<SelectablePill>(pillIn(group, label)).selected;
+    expect(selectedIn('Ice level', 'Less'), isTrue);
+    expect(selectedIn('Sweetness', 'Regular'), isTrue);
     expect(find.text(r'from $3.50'), findsOneWidget);
     // Pills are as wide as their text and sit side by side, not one per row.
     expect(tester.getSize(pill('Small')).width, lessThan(120));
@@ -140,15 +151,10 @@ void main() {
     );
   });
 
-  testWidgets('sweetness uses words, not percentages', (tester) async {
+  testWidgets('sweetness uses short words, not percentages', (tester) async {
     await openDrink(tester, 'Caramel Latte');
-    for (final label in [
-      'No sugar',
-      'Less sugar',
-      'Regular sugar',
-      'Extra sugar',
-    ]) {
-      expect(pill(label), findsOneWidget, reason: label);
+    for (final label in ['No sugar', 'Less', 'Regular', 'Extra']) {
+      expect(pillIn('Sweetness', label), findsOneWidget, reason: label);
     }
     expect(find.textContaining('%'), findsNothing);
   });
@@ -171,10 +177,13 @@ void main() {
     expect(find.byType(CustomizeDrinkScreen), findsNothing);
     final cart = container.read(cartControllerProvider);
     expect(cart.single.product.name, 'Caramel Latte');
-    expect(cart.single.optionSummary, 'Medium · Iced · Less · Regular sugar');
+    expect(
+      cart.single.optionSummary,
+      'Medium · Iced · Less ice · Regular sugar',
+    );
     expect(
       find.text(
-        'Added to cart · Caramel Latte · Medium · Iced · Less · Regular sugar',
+        'Added to cart · Caramel Latte · Medium · Iced · Less ice · Regular sugar',
       ),
       findsOneWidget,
     );

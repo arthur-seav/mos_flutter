@@ -38,7 +38,7 @@ void main() {
       'Medium',
       'Iced',
       'Less',
-      'Regular sugar',
+      'Regular',
     ]);
   });
 
@@ -109,6 +109,16 @@ void main() {
       expect(s.unitPrice, Money.dollars(3));
     },
   );
+
+  test('cart lines say which group a short name belongs to', () async {
+    var s = await open(caramelLatte);
+    expect(
+      s.toCartItem().optionSummary,
+      'Medium · Iced · Less ice · Regular sugar',
+    );
+    s = pick(s, 'Sweetness', 'No sugar');
+    expect(s.toCartItem().optionSummary, 'Medium · Iced · Less ice · No sugar');
+  });
 
   test('quantity stays between 1 and 20', () async {
     final s = await open(latte);
