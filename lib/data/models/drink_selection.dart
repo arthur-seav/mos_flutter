@@ -28,6 +28,31 @@ class DrinkSelection {
     );
   }
 
+  /// "Edit options" from the cart: starts with the line's options and
+  /// quantity. Groups the line has nothing for (e.g. ice level of a hot
+  /// drink) keep their defaults. Prices come from [customization], so an
+  /// edited line gets today's prices.
+  factory DrinkSelection.fromCartItem(
+    ProductCustomization customization,
+    CartItem item,
+  ) {
+    final initial = DrinkSelection.initial(customization);
+    final chosen = Map.of(initial.chosen);
+    for (final g in customization.groups) {
+      final ids = [
+        for (final o in item.options)
+          if (o.groupId == g.group.id && g.optionById(o.id) != null) o.id,
+      ];
+      if (ids.isNotEmpty) chosen[g.group.id] = ids;
+    }
+    return DrinkSelection._(
+      customization: customization,
+      chosen: chosen,
+      quantity: item.quantity.clamp(1, maxQuantity),
+    );
+  }
+
+  /// The most of one drink in one cart line.
   static const maxQuantity = 20;
 
   final ProductCustomization customization;
@@ -82,6 +107,37 @@ class DrinkSelection {
     for (final g in visibleGroups)
       if (g.group.isRequired && (chosen[g.group.id]?.isEmpty ?? true)) g,
   ];
+
+  /// The price shown on an option's button, or null for none. In a
+  /// single-choice group whose options cost different amounts (size,
+  /// shots), it is relative to the current choice: "-$0.50", "+$0.00",
+  /// "+$0.50". Add-ons keep their own price ("+$0.60"), groups where every
+  /// option is free show none, and a group with nothing chosen yet shows
+  /// the stored prices.
+  String? priceOf(ProductOptionGroup group, DrinkOption option) {
+    final own = option.extraPrice == Money.zero
+        ? null
+        : option.extraPrice.formatSigned();
+    if (!hasPriceChoice(group)) return own;
+    final ids = chosen[group.group.id] ?? const <int>[];
+    final current = ids.isEmpty ? null : group.optionById(ids.first);
+    // Every button in the row gets a price, "+$0.00" included.
+    if (current == null) return option.extraPrice.formatSigned();
+    return (option.extraPrice - current.extraPrice).formatSigned();
+  }
+
+  /// "Large +$0.50": name and [priceOf] on one line.
+  String labelOf(ProductOptionGroup group, DrinkOption option) {
+    final price = priceOf(group, option);
+    return price == null ? option.name : '${option.name} $price';
+  }
+
+  /// True for a single-choice group whose options cost different amounts
+  /// (size, shots): one choice is swapped for another, so prices are
+  /// compared.
+  bool hasPriceChoice(ProductOptionGroup group) =>
+      !group.group.isMultiple &&
+      group.options.map((o) => o.extraPrice).toSet().length > 1;
 
   /// TC-13: false when this would go over the group's limit.
   bool canChoose(ProductOptionGroup group, DrinkOption option) {

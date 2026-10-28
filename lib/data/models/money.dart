@@ -21,6 +21,14 @@ class Money implements Comparable<Money> {
 
   Money operator +(Money other) => Money.cents(cents + other.cents);
   Money operator *(int quantity) => Money.cents(cents * quantity);
+  Money operator -(Money other) => Money.cents(cents - other.cents);
+
+  /// A discount, e.g. a single shot instead of the default double.
+  bool get isNegative => cents < 0;
+
+  /// "+$0.50", "-$0.50", "+$0.00": a price difference.
+  String formatSigned() =>
+      isNegative ? '-${Money.cents(-cents).format()}' : '+${format()}';
 
   /// "$3.50"
   String format() => _format.format(cents / 100);

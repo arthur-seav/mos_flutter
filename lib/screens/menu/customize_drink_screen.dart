@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../controllers/cart/cart_controller.dart';
 import '../../controllers/menu/drink_selection_controller.dart';
 import '../../data/models/drink_selection.dart';
 import '../../theme/app_colors.dart';
@@ -9,6 +10,7 @@ import '../../theme/app_text_styles.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/quantity_selector.dart';
 import '../../widgets/common/square_icon_button.dart';
+import '../../widgets/common/top_toast.dart';
 import '../../widgets/menu/option_group_section.dart';
 import '../../widgets/menu/product_image.dart';
 
@@ -18,24 +20,27 @@ import '../../widgets/menu/product_image.dart';
 /// price updated on every tap (FR-09). The rules (BR-01 to BR-03) live in
 /// [DrinkSelection]; this screen draws it and passes taps to
 /// [DrinkSelectionController].
+///
+/// Opened from the cart's "Edit options" ([lineId] set), it starts with
+/// that line's choices and the button saves the line instead.
 class CustomizeDrinkScreen extends ConsumerWidget {
-  const CustomizeDrinkScreen({super.key, required this.productId});
+  const CustomizeDrinkScreen({super.key, required this.productId, this.lineId});
 
   final int productId;
+  final int? lineId;
+
+  DrinkPage get page => (productId: productId, lineId: lineId);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final provider = drinkSelectionProvider(productId);
+    final provider = drinkSelectionProvider(page);
     final selection = ref.watch(provider);
 
     return Scaffold(
       body: Stack(
         children: [
           switch (selection) {
-            AsyncData(:final value) => _Details(
-              selection: value,
-              productId: productId,
-            ),
+            AsyncData(:final value) => _Details(selection: value, page: page),
             AsyncError() => Center(
               child: EmptyState(
                 icon: Icons.wifi_off_outlined,
@@ -64,10 +69,7 @@ class CustomizeDrinkScreen extends ConsumerWidget {
         ],
       ),
       bottomNavigationBar: selection.hasValue
-          ? _AddToCartBar(
-              selection: selection.requireValue,
-              productId: productId,
-            )
+          ? _AddToCartBar(selection: selection.requireValue, page: page)
           : null,
     );
   }
@@ -75,15 +77,15 @@ class CustomizeDrinkScreen extends ConsumerWidget {
 
 /// Picture, name, price and the option groups.
 class _Details extends ConsumerWidget {
-  const _Details({required this.selection, required this.productId});
+  const _Details({required this.selection, required this.page});
 
   final DrinkSelection selection;
-  final int productId;
+  final DrinkPage page;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final product = selection.customization.product;
-    final controller = ref.read(drinkSelectionProvider(productId).notifier);
+    final controller = ref.read(drinkSelectionProvider(page).notifier);
     final missing = selection.showMissing
         ? selection.missingRequired.map((g) => g.group.id).toSet()
         : const <int>{};
@@ -118,7 +120,7 @@ class _Details extends ConsumerWidget {
                         child: Text(product.name, style: AppTextStyles.title),
                       ),
                       Text(
-                        'from ${product.basePrice.format()}',
+                        'from ${selection.customization.lowestPrice.format()}',
                         style: AppTextStyles.price,
                       ),
                     ],
@@ -137,6 +139,9 @@ class _Details extends ConsumerWidget {
                     OptionGroupSection(
                       group: group,
                       isChosen: (option) => selection.isChosen(group, option),
+                      labelOf: (option) => selection.labelOf(group, option),
+                      priceOf: (option) => selection.priceOf(group, option),
+                      pricesInRow: selection.hasPriceChoice(group),
                       canChoose: (option) => selection.canChoose(group, option),
                       onChoose: (option) => choose(group, option),
                       highlightMissing: missing.contains(group.group.id),
@@ -153,41 +158,48 @@ class _Details extends ConsumerWidget {
   }
 }
 
-/// Quantity and "Add to cart · $4.60" at the bottom.
+/// Quantity and "Add to cart · $4.60" (or "Save changes") at the bottom.
 class _AddToCartBar extends ConsumerWidget {
-  const _AddToCartBar({required this.selection, required this.productId});
+  const _AddToCartBar({required this.selection, required this.page});
 
   final DrinkSelection selection;
-  final int productId;
+  final DrinkPage page;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final controller = ref.read(drinkSelectionProvider(productId).notifier);
+    final controller = ref.read(drinkSelectionProvider(page).notifier);
+    final editing = controller.isEditing;
 
-    void addToCart() {
-      final item = controller.addToCart();
-      if (item == null) {
+    void submit() {
+      final update = controller.addToCart();
+      if (update == null) {
         _showMessage(
           context,
           DrinkSelectionController.missingMessage(
-            ref.read(drinkSelectionProvider(productId)).requireValue,
+            ref.read(drinkSelectionProvider(page)).requireValue,
           ),
         );
         return;
       }
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(
-              'Added to cart · ${item.product.name}'
-              '${item.options.isEmpty ? '' : ' · ${item.optionSummary}'}',
-            ),
-          ),
+      if (!editing) {
+        // Read now: this page (and its ref) is gone when Undo is tapped.
+        final cart = ref.read(cartControllerProvider.notifier);
+        final item = update.item;
+        TopToast.show(
+          context,
+          title: 'Added to cart',
+          message: [
+            item.product.name,
+            if (item.options.isNotEmpty) item.optionSummary,
+          ].join(' · '),
+          actionLabel: 'Undo',
+          onAction: () => cart.restore(update.before),
         );
+      }
       context.pop();
     }
 
+    final label = editing ? 'Save changes' : 'Add to cart';
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
@@ -207,8 +219,8 @@ class _AddToCartBar extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
-                  onPressed: addToCart,
-                  child: Text('Add to cart · ${selection.total.format()}'),
+                  onPressed: submit,
+                  child: Text('$label · ${selection.total.format()}'),
                 ),
               ),
             ],

@@ -4,6 +4,8 @@ import 'package:mos_app/data/models/drink_option.dart';
 import 'package:mos_app/data/models/drink_selection.dart';
 import 'package:mos_app/data/models/money.dart';
 
+import '../helpers.dart';
+
 void main() {
   final repo = MockMenuRepository(latency: Duration.zero);
   const espresso = 1, americano = 2, caramelLatte = 4, latte = 18;
@@ -60,7 +62,10 @@ void main() {
   });
 
   test('TC-12: a required group with no default is missing', () async {
-    final s = await open(americano);
+    // Every demo drink has defaults; here the admin left the size empty.
+    final s = DrinkSelection.initial(
+      await NoDefaultSizeMenuRepository().fetchCustomization(americano),
+    );
     expect(s.missingRequired.map((g) => g.group.name), ['Size']);
     expect(pick(s, 'Size', 'Small').missingRequired, isEmpty);
   });
@@ -104,6 +109,7 @@ void main() {
     'TC-15: Large is +\$0.50 for Americano, not the Latte\'s +\$1.00',
     () async {
       var s = await open(americano);
+      expect(s.unitPrice, Money.dollars(2.75)); // Medium by default
       s = pick(s, 'Size', 'Large');
       expect(option(s, 'Size', 'Large').label, r'Large +$0.50');
       expect(s.unitPrice, Money.dollars(3));
@@ -118,6 +124,63 @@ void main() {
     );
     s = pick(s, 'Sweetness', 'No sugar');
     expect(s.toCartItem().optionSummary, 'Medium · Iced · Less ice · No sugar');
+  });
+
+  test('"Edit options" starts from the cart line', () async {
+    var s = await open(caramelLatte);
+    s = pick(s, 'Temperature', 'Hot');
+    s = pick(s, 'Add-ons', 'Oat milk').withQuantity(2);
+    final line = s.toCartItem();
+
+    final edit = DrinkSelection.fromCartItem(s.customization, line);
+    expect(edit.chosenOptions.map((o) => o.name), [
+      'Medium',
+      'Hot',
+      'Regular',
+      'Oat milk',
+    ]);
+    expect(edit.quantity, 2);
+    // Ice level was hidden; back to Iced, it shows its default again.
+    expect(
+      pick(edit, 'Temperature', 'Iced').chosenOptions.map((o) => o.name),
+      contains('Less'),
+    );
+  });
+
+  test('Espresso: shots, double by default; a single is cheaper', () async {
+    var s = await open(espresso);
+    expect(visible(s), ['Shots', 'Temperature', 'Sweetness', 'Add-ons']);
+    expect(s.unitPrice, Money.dollars(2));
+    s = pick(s, 'Shots', 'Single');
+    expect(s.unitPrice, Money.dollars(1.5));
+    s = pick(s, 'Shots', 'Triple');
+    s = pick(s, 'Add-ons', 'Extra shot');
+    expect(s.unitPrice, Money.dollars(3));
+    expect(
+      s.toCartItem().optionSummary,
+      'Triple shot · Hot · No sugar · Extra shot',
+    );
+  });
+
+  test('size labels are relative to the current choice', () async {
+    var s = await open(latte);
+    String labels(String g) =>
+        group(s, g).options.map((o) => s.labelOf(group(s, g), o)).join(', ');
+    expect(labels('Size'), r'Small -$0.50, Medium +$0.00, Large +$0.50');
+    s = pick(s, 'Size', 'Large');
+    expect(labels('Size'), r'Small -$1.00, Medium -$0.50, Large +$0.00');
+    expect(labels('Temperature'), 'Hot, Iced');
+    expect(labels('Add-ons'), startsWith(r'Oat milk +$0.60'));
+
+    // Nothing chosen yet (TC-12): the stored prices.
+    final americano = DrinkSelection.initial(
+      await NoDefaultSizeMenuRepository().fetchCustomization(2),
+    );
+    final size = group(americano, 'Size');
+    expect(
+      size.options.map((o) => americano.labelOf(size, o)).join(', '),
+      r'Small +$0.00, Medium +$0.25, Large +$0.50',
+    );
   });
 
   test('quantity stays between 1 and 20', () async {

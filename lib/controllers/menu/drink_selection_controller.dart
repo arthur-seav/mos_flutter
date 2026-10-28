@@ -6,27 +6,43 @@ import '../../data/models/drink_selection.dart';
 import '../../data/repository_providers.dart';
 import '../cart/cart_controller.dart';
 
+/// Which drink the customization page is for. [lineId] is set when it
+/// was opened with "Edit options" from the cart.
+typedef DrinkPage = ({int productId, int? lineId});
+
+/// What "Add to cart" did: the line, and the cart before (for "Undo").
+typedef CartUpdate = ({CartItem item, List<CartItem> before});
+
 /// The customization page's state for one drink (FR-08, FR-09).
 ///
-/// One per product id (`drinkSelectionProvider(productId)`), loaded from the
-/// repository and forgotten when the page closes. The screen reads the
-/// [DrinkSelection]; every rule lives in that model.
+/// One per page (`drinkSelectionProvider((productId: 4, lineId: null))`),
+/// loaded from the repository and forgotten when the page closes. The
+/// screen reads the [DrinkSelection]; every rule lives in that model.
 final drinkSelectionProvider = AsyncNotifierProvider.autoDispose
-    .family<DrinkSelectionController, DrinkSelection, int>(
+    .family<DrinkSelectionController, DrinkSelection, DrinkPage>(
       DrinkSelectionController.new,
     );
 
 class DrinkSelectionController extends AsyncNotifier<DrinkSelection> {
-  DrinkSelectionController(this.productId);
+  DrinkSelectionController(this.page);
 
-  final int productId;
+  final DrinkPage page;
+
+  /// True when editing a cart line: the button saves instead of adding.
+  bool get isEditing => page.lineId != null;
 
   @override
   Future<DrinkSelection> build() async {
     final customization = await ref
         .watch(menuRepositoryProvider)
-        .fetchCustomization(productId);
-    return DrinkSelection.initial(customization);
+        .fetchCustomization(page.productId);
+    final lineId = page.lineId;
+    final line = lineId == null
+        ? null
+        : ref.read(cartControllerProvider.notifier).line(lineId);
+    return line == null
+        ? DrinkSelection.initial(customization)
+        : DrinkSelection.fromCartItem(customization, line);
   }
 
   DrinkSelection? get _selection => state.value;
@@ -50,9 +66,10 @@ class DrinkSelectionController extends AsyncNotifier<DrinkSelection> {
     state = AsyncData(selection.withQuantity(quantity));
   }
 
-  /// Puts the drink in the cart and returns it, or returns null and marks
-  /// the empty required groups when something is missing (TC-12).
-  CartItem? addToCart() {
+  /// Puts the drink in the cart (or saves the edited line) and returns
+  /// what changed. Returns null and marks the empty required groups when
+  /// something is missing (TC-12).
+  CartUpdate? addToCart() {
     final selection = _selection;
     if (selection == null) return null;
     if (selection.missingRequired.isNotEmpty) {
@@ -60,8 +77,14 @@ class DrinkSelectionController extends AsyncNotifier<DrinkSelection> {
       return null;
     }
     final item = selection.toCartItem();
-    ref.read(cartControllerProvider.notifier).add(item);
-    return item;
+    final cart = ref.read(cartControllerProvider.notifier);
+    final lineId = page.lineId;
+    if (lineId != null) {
+      final before = ref.read(cartControllerProvider);
+      cart.replace(lineId, item);
+      return (item: item, before: before);
+    }
+    return (item: item, before: cart.add(item));
   }
 
   /// "Please choose a size." / "Please choose a size and sweetness."

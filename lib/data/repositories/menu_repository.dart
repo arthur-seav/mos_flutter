@@ -14,4 +14,8 @@ abstract interface class MenuRepository {
   /// The option groups, options, prices and defaults for one drink
   /// (FR-08, BR-01). Throws [StateError] for an unknown or removed drink.
   Future<ProductCustomization> fetchCustomization(int productId);
+
+  /// Of [productIds], the drinks that can no longer be ordered: sold out
+  /// today or removed from the menu. Checked before checkout (BR-05).
+  Future<Set<int>> fetchUnavailable(Iterable<int> productIds);
 }
