@@ -50,6 +50,14 @@ abstract final class AppTextStyles {
     color: AppColors.textPrimary,
   );
 
+  /// Form field labels (DG-F05 size, SemiBold as in the Figma login page).
+  static const fieldLabel = TextStyle(
+    fontFamily: sans,
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+  );
+
   /// DG-F06: chips, links, small buttons.
   static const label = TextStyle(
     fontFamily: sans,

@@ -35,6 +35,9 @@ abstract final class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      // Same sizes on every platform. Otherwise desktop/web previews switch
+      // to compact density and buttons shrink from 52 to 44 px.
+      visualDensity: VisualDensity.standard,
       colorScheme: scheme,
       scaffoldBackgroundColor: AppColors.canvas,
       fontFamily: AppTextStyles.sans,
