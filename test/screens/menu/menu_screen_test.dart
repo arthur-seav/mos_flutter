@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mos_app/data/models/cart_item.dart';
+import 'package:mos_app/data/models/money.dart';
+import 'package:mos_app/data/models/product.dart';
+import 'package:mos_app/controllers/cart/cart_controller.dart';
+import 'package:mos_app/screens/cart/cart_screen.dart';
+import 'package:mos_app/widgets/cart/cart_bar.dart';
 import 'package:mos_app/widgets/menu/add_button.dart';
 import 'package:mos_app/widgets/menu/product_tile.dart';
 
@@ -96,5 +102,45 @@ void main() {
       findsOneWidget,
     );
     expect(find.byTooltip('Add Mocha'), findsNothing);
+  });
+
+  testWidgets('FR-10: no cart bar while the cart is empty', (tester) async {
+    await openMenu(tester);
+
+    expect(find.byType(CartBar), findsNothing);
+    expect(find.text('View cart'), findsNothing);
+  });
+
+  testWidgets('FR-10: the cart bar shows the count and total, and opens '
+      'the cart', (tester) async {
+    final container = await pumpMosApp(tester);
+    await continueAsGuest(tester);
+    container
+        .read(cartControllerProvider.notifier)
+        .add(
+          CartItem(
+            product: Product(
+              id: 18,
+              categoryId: 1,
+              name: 'Latte',
+              basePrice: Money.dollars(3),
+            ),
+            options: const [],
+            quantity: 2,
+          ),
+        );
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(NavigationDestination, 'Menu'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CartBar), findsOneWidget);
+    expect(find.text('2 items'), findsOneWidget);
+    expect(find.text(r'$6.00'), findsOneWidget);
+
+    await tester.tap(find.byType(CartBar));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CartScreen), findsOneWidget);
+    expect(find.text('Your cart'), findsOneWidget);
   });
 }

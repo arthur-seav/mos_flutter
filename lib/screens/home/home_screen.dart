@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../app_routes.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/common/count_badge.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/square_icon_button.dart';
 import '../../controllers/auth/auth_controller.dart';
+import '../../controllers/cart/cart_controller.dart';
 import '../../controllers/menu/menu_filter_controller.dart';
 import '../../controllers/menu/menu_providers.dart';
 import '../../widgets/menu/menu_search_field.dart';
@@ -28,6 +30,7 @@ class HomeScreen extends ConsumerWidget {
     final session = ref.watch(authControllerProvider);
     final name = session.user?.firstName ?? 'Guest';
     final filter = ref.read(menuFilterProvider.notifier);
+    final cartCount = ref.watch(cartCountProvider);
 
     void openMenu() => context.go(AppRoutes.menu);
 
@@ -58,10 +61,20 @@ class HomeScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      SquareIconButton(
-                        icon: Icons.shopping_bag_outlined,
-                        tooltip: 'Cart',
-                        onPressed: () => _showCartComingSoon(context),
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          SquareIconButton(
+                            icon: Icons.shopping_bag_outlined,
+                            tooltip: 'Cart',
+                            onPressed: () => context.push(AppRoutes.cart),
+                          ),
+                          Positioned(
+                            top: -4,
+                            right: -4,
+                            child: CountBadge(count: cartCount),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -103,14 +116,6 @@ class HomeScreen extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  static void _showCartComingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(content: Text('The cart comes in a later step.')),
-      );
   }
 }
 
