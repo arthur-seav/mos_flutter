@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'core/theme/app_theme.dart';
+import 'theme/app_scroll_behavior.dart';
+import 'theme/app_theme.dart';
 import 'router.dart';
 
 class MosApp extends ConsumerWidget {
@@ -13,6 +14,7 @@ class MosApp extends ConsumerWidget {
       title: 'MOS Coffee',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      scrollBehavior: const AppScrollBehavior(),
       routerConfig: ref.watch(routerProvider),
     );
   }
