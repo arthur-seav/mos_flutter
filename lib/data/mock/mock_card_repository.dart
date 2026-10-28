@@ -1,3 +1,4 @@
+import '../../utils/card_validators.dart';
 import '../models/saved_card.dart';
 import '../repositories/card_repository.dart';
 
@@ -47,7 +48,7 @@ class MockCardRepository implements CardRepository {
   @override
   Future<SavedCard> addCard(NewCard card) async {
     await Future<void>.delayed(latency);
-    if (!_passesLuhn(card.number)) {
+    if (!passesLuhn(card.number)) {
       throw const CardException('This card number is not valid.');
     }
     final now = _now();
@@ -75,21 +76,5 @@ class MockCardRepository implements CardRepository {
       return 'Mastercard';
     }
     return 'Card';
-  }
-
-  /// The checksum every card number carries.
-  static bool _passesLuhn(String number) {
-    if (number.length < 12 || number.length > 19) return false;
-    if (number.contains(RegExp(r'\D'))) return false;
-    var sum = 0;
-    for (var i = 0; i < number.length; i++) {
-      var d = int.parse(number[number.length - 1 - i]);
-      if (i.isOdd) {
-        d *= 2;
-        if (d > 9) d -= 9;
-      }
-      sum += d;
-    }
-    return sum % 10 == 0;
   }
 }

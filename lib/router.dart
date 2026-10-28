@@ -5,7 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'app_routes.dart';
 import 'data/repositories/auth_repository.dart';
 import 'screens/account/profile_screen.dart';
+import 'controllers/checkout/payment_outcome.dart';
 import 'screens/cart/cart_screen.dart';
+import 'screens/checkout/card_payment_screen.dart';
+import 'screens/checkout/checkout_screen.dart';
+import 'screens/checkout/khqr_payment_screen.dart';
+import 'screens/checkout/payment_result_screen.dart';
 import 'controllers/auth/auth_controller.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'screens/auth/login_screen.dart';
@@ -78,6 +83,30 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.cart,
         builder: (context, state) => const CartScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.checkout,
+        builder: (context, state) => const CheckoutScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.khqrPattern,
+        builder: (context, state) => KhqrPaymentScreen(
+          orderId: int.parse(state.pathParameters['orderId']!),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.cardPattern,
+        builder: (context, state) => CardPaymentScreen(
+          orderId: int.parse(state.pathParameters['orderId']!),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.paymentResult,
+        // Only reachable from a payment page, which passes the outcome.
+        redirect: (context, state) =>
+            state.extra is PaymentOutcome ? null : AppRoutes.home,
+        builder: (context, state) =>
+            PaymentResultScreen(outcome: state.extra! as PaymentOutcome),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => MainShell(navigationShell: shell),

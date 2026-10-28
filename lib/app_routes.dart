@@ -19,6 +19,18 @@ abstract final class AppRoutes {
   /// The cart (FR-10), opened over the tabs.
   static const cart = '/cart';
 
+  /// Checkout (FR-11 to FR-13).
+  static const checkout = '/checkout';
+
+  /// Paying for an order that is waiting for payment.
+  static const khqrPattern = '/pay/khqr/:orderId';
+  static String khqr(int orderId) => '/pay/khqr/$orderId';
+  static const cardPattern = '/pay/card/:orderId';
+  static String card(int orderId) => '/pay/card/$orderId';
+
+  /// Success or failure (SA §4.2.3.4). Needs a PaymentOutcome as `extra`.
+  static const paymentResult = '/pay/result';
+
   /// Pages for people who are not signed in. Everything else needs a
   /// session (customer or guest).
   static const authPages = {login, signUp, forgotPassword, resetPassword};
