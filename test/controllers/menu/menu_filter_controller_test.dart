@@ -11,7 +11,7 @@ void main() {
   MenuFilterController filter() => container.read(menuFilterProvider.notifier);
 
   setUp(() {
-    container = ProviderContainer.test(overrides: mockOverrides());
+    container = ProviderContainer.test(overrides: testBackend().overrides);
   });
 
   test('starts on "All" with no search', () {

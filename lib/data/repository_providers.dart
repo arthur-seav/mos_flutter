@@ -1,7 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'repositories/auth_repository.dart';
+import 'repositories/card_repository.dart';
 import 'repositories/menu_repository.dart';
+import 'repositories/order_repository.dart';
+import 'repositories/store_repository.dart';
 
 /// The data sources the app uses (NFR-09).
 ///
@@ -17,5 +20,23 @@ final authRepositoryProvider = Provider<AuthRepository>(
 final menuRepositoryProvider = Provider<MenuRepository>(
   (ref) => throw UnimplementedError(
     'menuRepositoryProvider must be overridden in main.dart',
+  ),
+);
+
+final storeRepositoryProvider = Provider<StoreRepository>(
+  (ref) => throw UnimplementedError(
+    'storeRepositoryProvider must be overridden in main.dart',
+  ),
+);
+
+final orderRepositoryProvider = Provider<OrderRepository>(
+  (ref) => throw UnimplementedError(
+    'orderRepositoryProvider must be overridden in main.dart',
+  ),
+);
+
+final cardRepositoryProvider = Provider<CardRepository>(
+  (ref) => throw UnimplementedError(
+    'cardRepositoryProvider must be overridden in main.dart',
   ),
 );

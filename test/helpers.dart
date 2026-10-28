@@ -1,29 +1,31 @@
 import 'dart:ui';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/app.dart';
-import 'package:mos_app/data/mock/mock_auth_repository.dart';
+import 'package:mos_app/data/mock/mock_backend.dart';
 import 'package:mos_app/data/mock/mock_menu_repository.dart';
 import 'package:mos_app/data/models/drink_option.dart';
 import 'package:mos_app/data/models/product_customization.dart';
 import 'package:mos_app/data/repositories/menu_repository.dart';
-import 'package:mos_app/data/repository_providers.dart';
 
-/// A mock backend as a provider override. Instant by default; pass a
-/// [latency] to see loading states, or your own [menu].
-List<Override> mockOverrides({
+/// Thursday 29 October 2026, 10:12 AM: the store (7 AM - 9 PM) is open,
+/// so ASAP works and today's slots start at 10:45 (BR-07).
+DateTime testNow() => DateTime(2026, 10, 29, 10, 12);
+
+/// The mock backend for tests: instant, at [testNow] unless [clock] is
+/// given. Pass your own [menu] to change the drinks.
+MockBackend testBackend({
   Duration latency = Duration.zero,
+  DateTime Function()? clock,
   MenuRepository? menu,
-}) => [
-  authRepositoryProvider.overrideWithValue(
-    MockAuthRepository(latency: latency),
-  ),
-  menuRepositoryProvider.overrideWithValue(
-    menu ?? MockMenuRepository(latency: latency),
-  ),
-];
+  Duration? khqrPaysAfter = const Duration(seconds: 5),
+}) => MockBackend(
+  latency: latency,
+  clock: clock ?? testNow,
+  khqrPaysAfter: khqrPaysAfter,
+  menu: menu is MockMenuRepository ? menu : null,
+);
 
 /// The demo menu, but no drink has a default size: the admin left
 /// `default_option_id` empty (it is nullable). For TC-12, which the demo
@@ -54,13 +56,14 @@ Future<ProviderContainer> pumpMosApp(
   WidgetTester tester, {
   Duration latency = Duration.zero,
   MenuRepository? menu,
+  MockBackend? backend,
 }) async {
   tester.view.physicalSize = const Size(412, 917);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
 
   final container = ProviderContainer.test(
-    overrides: mockOverrides(latency: latency, menu: menu),
+    overrides: (backend ?? testBackend(latency: latency, menu: menu)).overrides,
   );
   await tester.pumpWidget(
     UncontrolledProviderScope(container: container, child: const MosApp()),

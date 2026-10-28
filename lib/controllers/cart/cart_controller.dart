@@ -55,6 +55,9 @@ class CartController extends Notifier<List<CartItem>> {
     return before;
   }
 
+  /// After a successful payment: the drinks are now an order.
+  void clear() => state = const [];
+
   /// Puts back a cart returned by [add] ("Undo").
   void restore(List<CartItem> before) => state = before;
 

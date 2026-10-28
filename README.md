@@ -114,6 +114,16 @@ Size and shot buttons show the price against the current choice ("Small -$0.50 �
 
 The cart stays in the app until checkout (SA §3.5). Before checkout the app asks which drinks sold out and removes them (BR-05). `MockMenuRepository.markSoldOut(id)` stands in for staff marking a drink sold out, for TC-17 in the tests. "Go to checkout" stops at a message until the checkout step is built.
 
+**Checkout and payment (mock).** The demo store is open 7:00 AM – 9:00 PM every day, with pickup slots every 15 minutes, at least 30 minutes ahead and no later than 8:00 PM (BR-07). Payments work like a gateway's test mode:
+
+| Method | What happens |
+|---|---|
+| KHQR | Paid 5 seconds after the QR code appears (TC-21). The QR expires after 5 minutes. |
+| Card ending 4242 (saved for Dara) | Paid. |
+| Card `4000 0000 0000 0002` (add it on the card page) | Declined, to show TC-22. |
+
+The mock backend works out every price from the menu and ignores any amount the app could send (TC-23). Guests are asked to log in before paying (BR-06).
+
 To try **Forgot password**, use `012 345 678` or `098 765 432`; any other number gives "Account not found." (TC-06).
 
 ## Open questions for the SA document
@@ -121,6 +131,9 @@ To try **Forgot password**, use `012 345 678` or `098 765 432`; any other number
 - **Ice level for hot drinks (BR-01).** The data dictionary has no way to say "this group only applies to iced drinks". The app adds two fields: `OptionGroup.needsIcedDrink` (true for Ice level) and `DrinkOption.isIced` (true for Iced). The backend needs the same, or a fixed rule.
 - **Short option names in cart lines.** Ice level and sweetness both use "Less / Regular / Extra". The app adds `OptionGroup.summaryNoun` ("ice", "sugar") so cart and order lines read "Less ice · Regular sugar".
 - **Negative extra prices.** Espresso's Single shot is -$0.50 from the default Double. `options.extra_price` is NUMERIC, so this fits, but the data dictionary only says "0 if free"; it should say discounts are allowed.
+- **ASAP ready time.** Checkout says "Ready in about 10 min" (Figma). There is no field for it; the app adds `StoreSettings.asapPrepMin`.
+- **Card holder name.** Figma shows the holder's name on a saved card; `saved_cards` has no column for it. The app keeps `SavedCard.holderName`.
+- **Why a payment failed.** The failure screen says why ("Your card was declined.", "The QR code expired…"). `payments` has no column for it; the app reads `Payment.failureReason` from the gateway's reply.
 - **Options a drink does not offer (TC-10: Espresso is Hot only).** `product_options` is described as a price override only. The app also reads it as "the options this drink offers" when a drink has rows for a group.
 
 ## Fonts
