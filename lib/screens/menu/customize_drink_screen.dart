@@ -189,6 +189,10 @@ class _AddToCartBar extends ConsumerWidget {
                 'Added to cart · ${item.product.name}'
                 '${item.options.isEmpty ? '' : ' · ${item.optionSummary}'}',
               ),
+              // Flutter keeps a SnackBar with an action open until it is
+              // tapped (persist defaults to true); close it like any other.
+              persist: false,
+              duration: const Duration(seconds: 4),
               action: SnackBarAction(
                 label: 'Undo',
                 onPressed: () => cart.restore(update.before),

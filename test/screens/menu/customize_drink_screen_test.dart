@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/controllers/cart/cart_controller.dart';
+import 'package:mos_app/router.dart';
 import 'package:mos_app/screens/menu/customize_drink_screen.dart';
 import 'package:mos_app/widgets/common/selectable_pill.dart';
 import 'package:mos_app/widgets/menu/option_group_section.dart';
@@ -46,7 +47,8 @@ void main() {
     (w) =>
         w is FilledButton &&
         w.child is Text &&
-        (w.child! as Text).data!.startsWith('Add to cart'),
+        ((w.child! as Text).data!.startsWith('Add to cart') ||
+            (w.child! as Text).data!.startsWith('Save changes')),
   );
 
   String buttonText(WidgetTester tester) =>
@@ -187,6 +189,52 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  testWidgets('Undo on "Added to cart" takes the drink back out', (
+    tester,
+  ) async {
+    final container = await openDrink(tester, 'Caramel Latte');
+    await tester.tap(addToCartButton());
+    await tester.pumpAndSettle();
+    expect(container.read(cartControllerProvider), hasLength(1));
+
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+    expect(container.read(cartControllerProvider), isEmpty);
+  });
+
+  testWidgets('"Edit options" starts from the cart line and saves it', (
+    tester,
+  ) async {
+    final container = await openDrink(tester, 'Latte');
+    await tapPill(tester, r'Large +$1.00');
+    await tester.tap(addToCartButton());
+    await tester.pumpAndSettle();
+    final line = container.read(cartControllerProvider).single;
+    // Let the "Added to cart" bar go away first.
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    expect(find.text('Undo'), findsNothing);
+
+    container
+        .read(routerProvider)
+        .push(AppRoutes.product(line.product.id, line: line.lineId));
+    await tester.pumpAndSettle();
+    expect(isSelected(tester, r'Large +$1.00'), isTrue);
+    expect(buttonText(tester), r'Save changes · $4.00');
+
+    await tapPill(tester, 'Small');
+    await tester.tap(find.byTooltip('Increase quantity'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(r'Save changes · $6.00'));
+    await tester.pumpAndSettle();
+
+    final edited = container.read(cartControllerProvider).single;
+    expect(edited.lineId, line.lineId);
+    expect(edited.quantity, 2);
+    expect(edited.optionSummary, startsWith('Small'));
+    expect(find.text('Undo'), findsNothing);
   });
 
   testWidgets('a sold-out drink cannot be opened from the menu', (
