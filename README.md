@@ -34,29 +34,33 @@ To preview in a browser: `flutter run -d chrome`.
 
 ## Project structure
 
+Folders are split by **layer** first, then by feature inside each layer.
+
 ```
 lib/
 ├── main.dart            # entry point; chooses mock or API repositories (NFR-09)
 ├── app.dart             # MaterialApp + theme + router
 ├── app_routes.dart      # route paths
 ├── router.dart          # all routes + login redirect (go_router)
-├── core/
-│   ├── forms/           # SubmitStateMixin: loading / error for form buttons
-│   ├── theme/           # SA 4.1 design guidelines: colors (DG-C*), text styles (DG-F*), ThemeData
-│   ├── utils/           # form validators
-│   └── widgets/         # widgets shared across features
+├── screens/             # full pages: they read controllers and draw, no logic
+│   ├── auth/  home/  menu/  orders/  account/
+│   └── shell/           # bottom navigation (Home / Menu / Orders / Profile)
+├── controllers/         # logic: Riverpod providers and Notifiers, no widgets
+│   ├── auth/  home/  menu/
+│   └── common/          # SubmitStateMixin (loading / error for form buttons)
+├── widgets/             # pieces of screens
+│   ├── common/          # used by several features (buttons, fields, empty state...)
+│   ├── auth/  menu/     # used by one feature's screens (menu widgets are also on Home)
 ├── data/
 │   ├── models/          # User, Product, Category, MenuCatalog, Money... (SA data dictionary)
 │   ├── repositories/    # abstract interfaces the UI depends on (NFR-09)
 │   ├── mock/            # in-memory implementations used until the backend exists
 │   └── repository_providers.dart
-└── features/<feature>/
-    ├── controllers/     # logic: Riverpod providers / Notifiers (no widgets)
-    ├── screens/         # full pages; they only read controllers and draw
-    └── widgets/         # pieces used by this feature's screens
+├── theme/               # SA 4.1 design guidelines: colors, text styles, ThemeData, scroll behaviour
+└── utils/               # form validators
 ```
 
-Features: `auth` (login, sign up, forgot / reset password), `shell` (bottom navigation), `home`, `menu`, `orders`, `account`.
+`test/` mirrors the same folders.
 
 ### How the layers talk
 
@@ -70,20 +74,21 @@ Features: `auth` (login, sign up, forgot / reset password), `shell` (bottom navi
 
 | Module | Purpose |
 |---|---|
-| `core/theme/app_colors.dart` | The 14 theme colors from SA 4.1.2. Never write hex codes in widgets. |
-| `core/theme/app_text_styles.dart` | The 8 text styles from SA 4.1.1. |
-| `core/theme/app_theme.dart` | Turns the two files above into `ThemeData`, so plain Material widgets match the Figma design. |
-| `core/utils/validators.dart` | Email / phone / password / name checks for every form. |
-| `core/forms/submit_state.dart` | Loading and error state for a form's submit button (`AsyncValue`). |
-| `core/widgets/labeled_text_field.dart` | Label + icon text field; can also show a server error under the field. |
-| `core/widgets/loading_button.dart` | Main button with a spinner while busy. |
-| `core/widgets/error_banner.dart` | Red box for a form-level error. |
-| `core/widgets/or_divider.dart` | The "— or —" line between two actions. |
-| `core/widgets/square_icon_button.dart` | White square icon button: back, search, cart. |
-| `core/widgets/empty_state.dart` | "Nothing here" / "Could not load" message with an optional button. |
+| `theme/app_colors.dart` | The 14 theme colors from SA 4.1.2. Never write hex codes in widgets. |
+| `theme/app_text_styles.dart` | The 8 text styles from SA 4.1.1. |
+| `theme/app_theme.dart` | Turns the two files above into `ThemeData`, so plain Material widgets match the Figma design. |
+| `theme/app_scroll_behavior.dart` | Turns off Android's "stretch" effect when a list is pulled past its end. |
+| `utils/validators.dart` | Email / phone / password / name checks for every form. |
+| `controllers/common/submit_state.dart` | Loading and error state for a form's submit button (`AsyncValue`). |
+| `widgets/common/labeled_text_field.dart` | Label + icon text field; can also show a server error under the field. |
+| `widgets/common/loading_button.dart` | Main button with a spinner while busy. |
+| `widgets/common/error_banner.dart` | Red box for a form-level error. |
+| `widgets/common/or_divider.dart` | The "— or —" line between two actions. |
+| `widgets/common/square_icon_button.dart` | White square icon button: back, search, cart. |
+| `widgets/common/empty_state.dart` | "Nothing here" / "Could not load" message with an optional button. |
 | `data/models/money.dart` | Prices as whole cents, so totals never have floating-point errors. |
-| `features/menu/widgets/` | Drink picture, add button / sold-out tag, category chips, search box, drink card and row (also used by Home). |
-| `features/auth/widgets/` | Auth-page pieces: back button, title, status page (success / verifying), footer link. |
+| `widgets/menu/` | Drink picture, add button / sold-out tag, category chips, search box, drink card and row (also used by Home). |
+| `widgets/auth/` | Auth-page pieces: back button, title, status page (success / verifying), footer link. |
 
 ## Demo accounts (mock data)
 

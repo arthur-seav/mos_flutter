@@ -4,16 +4,16 @@ import 'package:go_router/go_router.dart';
 
 import 'app_routes.dart';
 import 'data/repositories/auth_repository.dart';
-import 'features/account/screens/profile_screen.dart';
-import 'features/auth/controllers/auth_controller.dart';
-import 'features/auth/screens/forgot_password_screen.dart';
-import 'features/auth/screens/login_screen.dart';
-import 'features/auth/screens/reset_password_screen.dart';
-import 'features/auth/screens/sign_up_screen.dart';
-import 'features/home/screens/home_screen.dart';
-import 'features/menu/screens/menu_screen.dart';
-import 'features/orders/screens/orders_screen.dart';
-import 'features/shell/screens/main_shell.dart';
+import 'screens/account/profile_screen.dart';
+import 'controllers/auth/auth_controller.dart';
+import 'screens/auth/forgot_password_screen.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/auth/reset_password_screen.dart';
+import 'screens/auth/sign_up_screen.dart';
+import 'screens/home/home_screen.dart';
+import 'screens/menu/menu_screen.dart';
+import 'screens/orders/orders_screen.dart';
+import 'screens/shell/main_shell.dart';
 
 export 'app_routes.dart';
 
