@@ -31,6 +31,11 @@ abstract final class AppRoutes {
   /// Success or failure (SA §4.2.3.4). Needs a PaymentOutcome as `extra`.
   static const paymentResult = '/pay/result';
 
+  /// Login for a guest who must sign in first (BR-06, TC-18); afterwards
+  /// the app goes to [path].
+  static String loginThenReturnTo(String path) =>
+      '$login?from=${Uri.encodeQueryComponent(path)}';
+
   /// Pages for people who are not signed in. Everything else needs a
   /// session (customer or guest).
   static const authPages = {login, signUp, forgotPassword, resetPassword};

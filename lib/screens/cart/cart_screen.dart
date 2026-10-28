@@ -33,12 +33,15 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final removed = await notifier.removeUnavailable();
     if (!mounted) return;
     setState(() => _checking = false);
-    final message = removed.isEmpty
-        ? 'Checkout comes in the next step.'
-        : CartController.unavailableMessage(removed);
+    if (removed.isEmpty) {
+      context.push(AppRoutes.checkout);
+      return;
+    }
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(
+        SnackBar(content: Text(CartController.unavailableMessage(removed))),
+      );
   }
 
   @override

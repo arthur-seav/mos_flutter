@@ -9,6 +9,7 @@ import 'package:mos_app/data/models/product_customization.dart';
 import 'package:mos_app/data/repository_providers.dart';
 import 'package:mos_app/router.dart';
 import 'package:mos_app/screens/cart/cart_screen.dart';
+import 'package:mos_app/screens/checkout/checkout_screen.dart';
 import 'package:mos_app/screens/menu/customize_drink_screen.dart';
 import 'package:mos_app/screens/menu/menu_screen.dart';
 import 'package:mos_app/widgets/cart/add_more_button.dart';
@@ -221,14 +222,14 @@ void main() {
     expect(totalText(tester), r'$3.50');
   });
 
-  testWidgets('nothing sold out: the cart stays, checkout comes next', (
+  testWidgets('nothing sold out: "Go to checkout" opens checkout', (
     tester,
   ) async {
     final container = await openCart(tester, [latte]);
     await tester.tap(find.text('Go to checkout'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Checkout comes in the next step.'), findsOneWidget);
+    expect(find.byType(CheckoutScreen), findsOneWidget);
     expect(container.read(cartControllerProvider), hasLength(1));
   });
 }

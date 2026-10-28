@@ -46,12 +46,25 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (!session.value.hasSession) {
         return onAuthPage ? null : AppRoutes.login;
       }
-      return onAuthPage ? AppRoutes.home : null;
+      if (!onAuthPage) return null;
+      final from = state.uri.queryParameters['from'];
+      if (session.value.isGuest) {
+        // A guest stays on login only when sent there to sign in before
+        // ordering (BR-06, TC-18: login?from=/checkout). "Continue as
+        // guest" on the plain login page goes Home.
+        final plainLogin =
+            state.matchedLocation == AppRoutes.login && from == null;
+        return plainLogin ? AppRoutes.home : null;
+      }
+      // Signed in: on to where they were going, or Home.
+      return _returnPath(from) ?? AppRoutes.home;
     },
     routes: [
       GoRoute(
         path: AppRoutes.login,
-        builder: (context, state) => const LoginScreen(),
+        builder: (context, state) => LoginScreen(
+          returnTo: _returnPath(state.uri.queryParameters['from']),
+        ),
       ),
       GoRoute(
         path: AppRoutes.signUp,
@@ -154,3 +167,11 @@ final routerProvider = Provider<GoRouter>((ref) {
   });
   return router;
 });
+
+/// Only paths inside the app ("/checkout"), never another site.
+String? _returnPath(String? from) {
+  if (from == null || !from.startsWith('/') || from.startsWith('//')) {
+    return null;
+  }
+  return from;
+}

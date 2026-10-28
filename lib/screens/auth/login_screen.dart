@@ -11,6 +11,7 @@ import '../../widgets/common/labeled_text_field.dart';
 import '../../widgets/common/loading_button.dart';
 import '../../widgets/common/or_divider.dart';
 import '../../controllers/auth/auth_controller.dart';
+import '../../widgets/auth/auth_back_button.dart';
 import '../../widgets/auth/auth_footer_link.dart';
 import '../../widgets/auth/auth_title.dart';
 import '../../widgets/auth/brand_header.dart';
@@ -21,7 +22,12 @@ import '../../widgets/auth/brand_header.dart';
 /// Where to go next is decided by the router: once [authControllerProvider]
 /// has a session, the router leaves this page by itself.
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.returnTo});
+
+  /// Where to go after signing in, for a guest sent here before ordering
+  /// (BR-06, TC-18). The router's redirect does not run for a pushed
+  /// page, so this page navigates itself.
+  final String? returnTo;
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -51,11 +57,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             password: _passwordController.text,
           ),
     );
+    final returnTo = widget.returnTo;
+    if (returnTo != null &&
+        mounted &&
+        ref.read(authControllerProvider).isCustomer) {
+      context.go(returnTo);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final error = submitError;
+
+    // A guest sent here to sign in before ordering (BR-06, TC-18) can go
+    // back, and is already a guest.
+    final isGuest = ref.watch(authControllerProvider).isGuest;
 
     return Scaffold(
       body: SafeArea(
@@ -67,6 +83,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 padding: const EdgeInsets.fromLTRB(24, 48, 24, 0),
                 sliver: SliverList.list(
                   children: [
+                    if (isGuest && context.canPop()) ...[
+                      const AuthBackButton(),
+                      const SizedBox(height: 16),
+                    ],
                     const BrandHeader(),
                     const SizedBox(height: 32),
                     const AuthTitle(
@@ -131,17 +151,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       isLoading: isSubmitting,
                       onPressed: _signIn,
                     ),
-                    const SizedBox(height: 20),
-                    const OrDivider(),
-                    const SizedBox(height: 20),
-                    OutlinedButton(
-                      onPressed: isSubmitting
-                          ? null
-                          : ref
-                                .read(authControllerProvider.notifier)
-                                .continueAsGuest,
-                      child: const Text('Continue as guest'),
-                    ),
+                    if (!isGuest) ...[
+                      const SizedBox(height: 20),
+                      const OrDivider(),
+                      const SizedBox(height: 20),
+                      OutlinedButton(
+                        onPressed: isSubmitting
+                            ? null
+                            : ref
+                                  .read(authControllerProvider.notifier)
+                                  .continueAsGuest,
+                        child: const Text('Continue as guest'),
+                      ),
+                    ],
                   ],
                 ),
               ),
