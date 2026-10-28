@@ -29,6 +29,7 @@ To preview in a browser: `flutter run -d chrome`.
 | `flutter_riverpod` 3.3.x | State management. 3.3.x is the newest line that supports Dart 3.11. |
 | `go_router` 17.x | Routing, bottom tabs, redirect to login when there is no session. |
 | `email_validator` | Email format check. |
+| `intl` | Price formatting (`$3.50`). |
 | `phone_numbers_parser` | Phone number check (Dart port of Google's libphonenumber). |
 
 ## Project structure
@@ -45,7 +46,7 @@ lib/
 │   ├── utils/           # form validators
 │   └── widgets/         # widgets shared across features
 ├── data/
-│   ├── models/          # User, SignUpRequest (mirror the SA data dictionary)
+│   ├── models/          # User, Product, Category, MenuCatalog, Money... (SA data dictionary)
 │   ├── repositories/    # abstract interfaces the UI depends on (NFR-09)
 │   ├── mock/            # in-memory implementations used until the backend exists
 │   └── repository_providers.dart
@@ -78,6 +79,10 @@ Features: `auth` (login, sign up, forgot / reset password), `shell` (bottom navi
 | `core/widgets/loading_button.dart` | Main button with a spinner while busy. |
 | `core/widgets/error_banner.dart` | Red box for a form-level error. |
 | `core/widgets/or_divider.dart` | The "— or —" line between two actions. |
+| `core/widgets/square_icon_button.dart` | White square icon button: back, search, cart. |
+| `core/widgets/empty_state.dart` | "Nothing here" / "Could not load" message with an optional button. |
+| `data/models/money.dart` | Prices as whole cents, so totals never have floating-point errors. |
+| `features/menu/widgets/` | Drink picture, add button / sold-out tag, category chips, search box, drink card and row (also used by Home). |
 | `features/auth/widgets/` | Auth-page pieces: back button, title, status page (success / verifying), footer link. |
 
 ## Demo accounts (mock data)
@@ -90,6 +95,8 @@ All use the password `password123`. Accounts you create and passwords you reset 
 | `098 765 432` | Customer (phone only), signs in |
 | `inactive@example.com` | Deactivated, refused |
 | `staff@mos.coffee` | Staff, refused: staff use the admin dashboard (FR-05) |
+
+The demo menu has 4 categories and 16 drinks. **Mocha is sold out**, to show TC-09.
 
 To try **Forgot password**, use `012 345 678` or `098 765 432`; any other number gives "Account not found." (TC-06).
 

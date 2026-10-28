@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/app.dart';
 import 'package:mos_app/data/mock/mock_auth_repository.dart';
+import 'package:mos_app/data/mock/mock_menu_repository.dart';
 import 'package:mos_app/data/repository_providers.dart';
 
 /// A mock backend as a provider override. Instant by default; pass a
@@ -12,6 +13,9 @@ import 'package:mos_app/data/repository_providers.dart';
 List<Override> mockOverrides({Duration latency = Duration.zero}) => [
   authRepositoryProvider.overrideWithValue(
     MockAuthRepository(latency: latency),
+  ),
+  menuRepositoryProvider.overrideWithValue(
+    MockMenuRepository(latency: latency),
   ),
 ];
 
@@ -35,4 +39,10 @@ Future<ProviderContainer> pumpMosApp(
   );
   await tester.pumpAndSettle();
   return container;
+}
+
+/// Taps "Continue as guest" on the login page and waits for Home.
+Future<void> continueAsGuest(WidgetTester tester) async {
+  await tester.tap(find.text('Continue as guest'));
+  await tester.pumpAndSettle();
 }
