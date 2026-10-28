@@ -12,12 +12,17 @@ class OptionGroupSection extends StatelessWidget {
     super.key,
     required this.group,
     required this.isChosen,
+    required this.canChoose,
     required this.onChoose,
     this.highlightMissing = false,
   });
 
   final ProductOptionGroup group;
   final bool Function(DrinkOption option) isChosen;
+
+  /// False for options that would go over the group's limit; they are
+  /// shown faded and cannot be tapped (BR-02, TC-13).
+  final bool Function(DrinkOption option) canChoose;
   final ValueChanged<DrinkOption> onChoose;
 
   /// TC-12: the group is required but empty after "Add to cart".
@@ -40,7 +45,12 @@ class OptionGroupSection extends StatelessWidget {
         ),
         if (g.isMultiple) ...[
           const SizedBox(height: 4),
-          Text('Choose up to ${g.maxSelect}.', style: AppTextStyles.caption),
+          Text(
+            group.options.any((o) => !canChoose(o))
+                ? 'You have chosen ${g.maxSelect}. Remove one to pick another.'
+                : 'Choose up to ${g.maxSelect}.',
+            style: AppTextStyles.caption,
+          ),
         ],
         const SizedBox(height: 12),
         Wrap(
@@ -51,6 +61,7 @@ class OptionGroupSection extends StatelessWidget {
               SelectablePill(
                 label: option.label,
                 selected: isChosen(option),
+                enabled: canChoose(option),
                 onTap: () => onChoose(option),
               ),
           ],

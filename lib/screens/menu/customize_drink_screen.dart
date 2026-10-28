@@ -137,6 +137,7 @@ class _Details extends ConsumerWidget {
                     OptionGroupSection(
                       group: group,
                       isChosen: (option) => selection.isChosen(group, option),
+                      canChoose: (option) => selection.canChoose(group, option),
                       onChoose: (option) => choose(group, option),
                       highlightMissing: missing.contains(group.group.id),
                     ),

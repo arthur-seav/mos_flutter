@@ -49,7 +49,7 @@ void main() {
     tester,
   ) async {
     await openDrink(tester, 'Caramel Latte');
-    for (final label in [r'Medium +$0.50', 'Iced', 'Less', '50%']) {
+    for (final label in [r'Medium +$0.50', 'Iced', 'Less', 'Regular sugar']) {
       expect(isSelected(tester, label), isTrue, reason: label);
     }
     expect(find.text(r'from $3.50'), findsOneWidget);
@@ -99,18 +99,58 @@ void main() {
     expect(buttonText(tester), r'Add to cart · $3.00');
   });
 
-  testWidgets('TC-13: a 4th add-on is refused with a message', (tester) async {
+  testWidgets('TC-13: after 3 add-ons the others are faded and disabled', (
+    tester,
+  ) async {
     await openDrink(tester, 'Caramel Latte');
     for (final label in [
       r'Oat milk +$0.60',
       r'Extra shot +$0.50',
       r'Vanilla syrup +$0.40',
-      r'Whipped cream +$0.40',
     ]) {
       await tapPill(tester, label);
     }
+    final whipped = tester.widget<SelectablePill>(
+      pill(r'Whipped cream +$0.40'),
+    );
+    expect(whipped.enabled, isFalse);
+    expect(
+      tester.widget<SelectablePill>(pill(r'Caramel drizzle +$0.30')).enabled,
+      isFalse,
+    );
+    // The chosen three stay tappable, so one can be removed.
+    expect(
+      tester.widget<SelectablePill>(pill(r'Oat milk +$0.60')).enabled,
+      isTrue,
+    );
+    expect(
+      find.text('You have chosen 3. Remove one to pick another.'),
+      findsOneWidget,
+    );
+
+    // Tapping a faded one does nothing.
+    await tapPill(tester, r'Whipped cream +$0.40');
     expect(isSelected(tester, r'Whipped cream +$0.40'), isFalse);
-    expect(find.text('You can choose up to 3 add-ons.'), findsOneWidget);
+
+    // Removing one enables the rest again.
+    await tapPill(tester, r'Oat milk +$0.60');
+    expect(
+      tester.widget<SelectablePill>(pill(r'Whipped cream +$0.40')).enabled,
+      isTrue,
+    );
+  });
+
+  testWidgets('sweetness uses words, not percentages', (tester) async {
+    await openDrink(tester, 'Caramel Latte');
+    for (final label in [
+      'No sugar',
+      'Less sugar',
+      'Regular sugar',
+      'Extra sugar',
+    ]) {
+      expect(pill(label), findsOneWidget, reason: label);
+    }
+    expect(find.textContaining('%'), findsNothing);
   });
 
   testWidgets('TC-12: without a size, the drink is not added', (tester) async {
@@ -131,9 +171,11 @@ void main() {
     expect(find.byType(CustomizeDrinkScreen), findsNothing);
     final cart = container.read(cartControllerProvider);
     expect(cart.single.product.name, 'Caramel Latte');
-    expect(cart.single.optionSummary, 'Medium · Iced · Less · 50%');
+    expect(cart.single.optionSummary, 'Medium · Iced · Less · Regular sugar');
     expect(
-      find.text('Added to cart · Caramel Latte · Medium · Iced · Less · 50%'),
+      find.text(
+        'Added to cart · Caramel Latte · Medium · Iced · Less · Regular sugar',
+      ),
       findsOneWidget,
     );
   });

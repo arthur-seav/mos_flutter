@@ -38,7 +38,7 @@ void main() {
       'Medium',
       'Iced',
       'Less',
-      '50%',
+      'Regular sugar',
     ]);
   });
 
@@ -120,7 +120,7 @@ void main() {
     var s = await open(latte);
     s = pick(s, 'Size', 'Large').withQuantity(2);
     final item = s.toCartItem();
-    expect(item.optionSummary, 'Large · Hot · 50%');
+    expect(item.optionSummary, 'Large · Hot · Regular sugar');
     expect(item.lineTotal, Money.dollars(8));
   });
 }

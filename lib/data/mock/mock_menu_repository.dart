@@ -143,7 +143,7 @@ class MockMenuRepository implements MenuRepository {
   static const small = 101, medium = 102, large = 103;
   static const hot = 201, iced = 202;
   static const noIce = 301, lessIce = 302, regularIce = 303, extraIce = 304;
-  static const sweet0 = 401, sweet25 = 402, sweet50 = 403;
+  static const noSugar = 401, lessSugar = 402, normalSugar = 403;
   static const oatMilk = 501, extraShot = 502;
 
   /// Every option with its default extra price (`options.extra_price`).
@@ -174,11 +174,12 @@ class MockMenuRepository implements MenuRepository {
       DrinkOption(id: extraIce, groupId: 3, name: 'Extra'),
     ],
     _sweetness: const [
-      DrinkOption(id: sweet0, groupId: 4, name: '0%'),
-      DrinkOption(id: sweet25, groupId: 4, name: '25%'),
-      DrinkOption(id: sweet50, groupId: 4, name: '50%'),
-      DrinkOption(id: 404, groupId: 4, name: '75%'),
-      DrinkOption(id: 405, groupId: 4, name: '100%'),
+      // Words instead of percentages. Each name says "sugar", so a cart
+      // line like "Iced · Less · Regular sugar" is clear on its own.
+      DrinkOption(id: noSugar, groupId: 4, name: 'No sugar'),
+      DrinkOption(id: lessSugar, groupId: 4, name: 'Less sugar'),
+      DrinkOption(id: normalSugar, groupId: 4, name: 'Regular sugar'),
+      DrinkOption(id: 404, groupId: 4, name: 'Extra sugar'),
     ],
     _addOns: [
       DrinkOption(
@@ -245,7 +246,7 @@ class MockMenuRepository implements MenuRepository {
     int? size = medium,
     int temperature = hot,
     int ice = regularIce,
-    int sweetness = sweet50,
+    int sweetness = normalSugar,
     Map<int, double> sizePrices = const {},
   }) => [
     _offer(_size, defaultId: size, prices: sizePrices),
@@ -259,7 +260,7 @@ class MockMenuRepository implements MenuRepository {
   static List<ProductOptionGroup> _coldOnly() => [
     _offer(_size, defaultId: medium),
     _offer(_ice, defaultId: regularIce),
-    _offer(_sweetness, defaultId: sweet50),
+    _offer(_sweetness, defaultId: normalSugar),
     _offer(_addOns),
   ];
 
@@ -269,13 +270,13 @@ class MockMenuRepository implements MenuRepository {
         1 => [
           _offer(_size, defaultId: medium),
           _offer(_temperature, defaultId: hot, only: [hot]),
-          _offer(_sweetness, defaultId: sweet0),
+          _offer(_sweetness, defaultId: noSugar),
           _offer(_addOns),
         ],
         // TC-12: no default size. TC-15: Large is +$0.50 for Americano.
         2 => _hotOrIced(
           size: null,
-          sweetness: sweet0,
+          sweetness: noSugar,
           sizePrices: {large: 0.5},
         ),
         // TC-11: the Figma defaults.
