@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/data/mock/mock_auth_repository.dart';
-import 'package:mos_app/features/auth/auth_controller.dart';
-import 'package:mos_app/features/auth/forgot_password_screen.dart';
-import 'package:mos_app/features/auth/login_screen.dart';
-import 'package:mos_app/features/auth/reset_password_screen.dart';
+import 'package:mos_app/features/auth/controllers/auth_controller.dart';
+import 'package:mos_app/features/auth/screens/forgot_password_screen.dart';
+import 'package:mos_app/features/auth/screens/login_screen.dart';
+import 'package:mos_app/features/auth/screens/reset_password_screen.dart';
 import 'package:mos_app/features/auth/widgets/auth_status_view.dart';
 
-import '../../helpers.dart';
+import '../../../helpers.dart';
 
 void main() {
   Future<void> openForgotPassword(WidgetTester tester) async {

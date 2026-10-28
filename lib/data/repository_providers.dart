@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'repositories/auth_repository.dart';
+import 'repositories/menu_repository.dart';
 
 /// The data sources the app uses (NFR-09).
 ///
@@ -10,5 +11,11 @@ import 'repositories/auth_repository.dart';
 final authRepositoryProvider = Provider<AuthRepository>(
   (ref) => throw UnimplementedError(
     'authRepositoryProvider must be overridden in main.dart',
+  ),
+);
+
+final menuRepositoryProvider = Provider<MenuRepository>(
+  (ref) => throw UnimplementedError(
+    'menuRepositoryProvider must be overridden in main.dart',
   ),
 );

@@ -89,6 +89,26 @@ String? validateOptionalPhone(String? value) {
   return 'Enter a valid mobile number.';
 }
 
+/// Sign up (FR-02): an email **or** a phone number. Each is optional on its
+/// own, but not both. Shown on the email field.
+String? validateSignUpEmail(String? email, {required String phone}) {
+  final bothEmpty = (email?.trim().isEmpty ?? true) && phone.trim().isEmpty;
+  if (bothEmpty) return 'Enter an email or a phone number.';
+  return validateOptionalEmail(email);
+}
+
+/// The second password field must repeat the first.
+String? validatePasswordConfirmation(
+  String? confirmation, {
+  required String password,
+}) {
+  if (confirmation == null || confirmation.isEmpty) {
+    return 'Type the new password again.';
+  }
+  if (confirmation != password) return 'Passwords do not match.';
+  return null;
+}
+
 String? validatePhone(String? value) {
   final text = value?.trim() ?? '';
   if (text.isEmpty) return 'Enter your phone number.';

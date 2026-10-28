@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
 import 'data/mock/mock_auth_repository.dart';
+import 'data/mock/mock_menu_repository.dart';
 import 'data/repository_providers.dart';
 
 void main() {
@@ -12,6 +13,7 @@ void main() {
       // the API version once the backend is ready; nothing else changes.
       overrides: [
         authRepositoryProvider.overrideWithValue(MockAuthRepository()),
+        menuRepositoryProvider.overrideWithValue(MockMenuRepository()),
       ],
       child: const MosApp(),
     ),

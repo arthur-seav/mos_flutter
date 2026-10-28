@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mos_app/features/auth/auth_controller.dart';
-import 'package:mos_app/features/auth/login_screen.dart';
-import 'package:mos_app/features/auth/sign_up_screen.dart';
+import 'package:mos_app/features/auth/controllers/auth_controller.dart';
+import 'package:mos_app/features/auth/screens/login_screen.dart';
+import 'package:mos_app/features/auth/screens/sign_up_screen.dart';
 import 'package:mos_app/features/auth/widgets/auth_status_view.dart';
 
-import '../../helpers.dart';
+import '../../../helpers.dart';
 
 void main() {
   Finder field(int index) => find.byType(TextFormField).at(index);
