@@ -100,7 +100,8 @@ class _Header extends StatelessWidget {
             onPressed: () => context.pop(),
           ),
           const SizedBox(width: 12),
-          Expanded(child: Text('Your cart', style: AppTextStyles.pageTitle)),
+          // Figma: the same size as "Your cart is empty", smaller than tab titles.
+          Expanded(child: Text('Your cart', style: AppTextStyles.title)),
           if (!isEmpty)
             Text(
               count == 1 ? '1 item' : '$count items',

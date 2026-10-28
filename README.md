@@ -43,14 +43,14 @@ lib/
 ├── app_routes.dart      # route paths
 ├── router.dart          # all routes + login redirect (go_router)
 ├── screens/             # full pages: they read controllers and draw, no logic
-│   ├── auth/  home/  menu/  orders/  account/   # menu/ includes customize_drink_screen
+│   ├── auth/  home/  menu/  cart/  orders/  account/   # menu/ includes customize_drink_screen
 │   └── shell/           # bottom navigation (Home / Menu / Orders / Profile)
 ├── controllers/         # logic: Riverpod providers and Notifiers, no widgets
 │   ├── auth/  home/  menu/  cart/
 │   └── common/          # SubmitStateMixin (loading / error for form buttons)
 ├── widgets/             # pieces of screens
 │   ├── common/          # used by several features (buttons, fields, empty state...)
-│   ├── auth/  menu/     # used by one feature's screens (menu widgets are also on Home)
+│   ├── auth/  menu/  cart/   # used by one feature's screens (menu widgets are also on Home)
 ├── data/
 │   ├── models/          # User, Product, Category, MenuCatalog, Money, DrinkOption,
 │   │                    # DrinkSelection (BR-01..03), CartItem ... (SA data dictionary)
@@ -89,7 +89,9 @@ lib/
 | `widgets/common/empty_state.dart` | "Nothing here" / "Could not load" message with an optional button. |
 | `data/models/money.dart` | Prices as whole cents, so totals never have floating-point errors. |
 | `widgets/common/selectable_pill.dart` | Rounded choice button: category chips and drink options. |
-| `widgets/common/quantity_selector.dart` | "− 1 +" on the drink page (and the cart next). |
+| `widgets/common/quantity_selector.dart` | "− 1 +" on the drink page and in the cart. |
+| `widgets/common/count_badge.dart` | Caramel count badge on the Home cart button ("9+" above 9). |
+| `widgets/cart/` | Cart line card and the Menu cart bar. |
 | `widgets/menu/` | Drink picture, add button / sold-out tag, category chips, search box, drink card and row (also used by Home). |
 | `widgets/auth/` | Auth-page pieces: back button, title, status page (success / verifying), footer link. |
 
@@ -106,6 +108,8 @@ All use the password `password123`. Accounts you create and passwords you reset 
 
 The demo menu has 4 categories and 17 drinks. **Mocha is sold out**, to show TC-09.
 Drink options follow the test cases: Espresso is hot only (TC-10), Caramel Latte opens with the Figma defaults (TC-11), Americano has no default size (TC-12) and Large +$0.50 (TC-15), Latte is $3.00 with Large +$1.00 (TC-14).
+
+The cart stays in the app until checkout (SA §3.5). Before checkout the app asks which drinks sold out and removes them (BR-05). `MockMenuRepository.markSoldOut(id)` stands in for staff marking a drink sold out, for TC-17 in the tests. "Go to checkout" stops at a message until the checkout step is built.
 
 To try **Forgot password**, use `012 345 678` or `098 765 432`; any other number gives "Account not found." (TC-06).
 
