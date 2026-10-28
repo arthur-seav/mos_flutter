@@ -26,7 +26,7 @@ void main() {
     await openMenu(tester);
 
     expect(find.text('Menu'), findsWidgets);
-    expect(find.text('6 items'), findsOneWidget);
+    expect(find.text('7 items'), findsOneWidget);
     final espresso = find.widgetWithText(ProductTile, 'Espresso');
     expect(espresso, findsOneWidget);
     expect(
@@ -58,7 +58,7 @@ void main() {
     final names = tester
         .widgetList<ProductTile>(find.byType(ProductTile))
         .map((t) => t.product.name);
-    expect(names, ['Caramel Latte', 'Matcha Latte']);
+    expect(names, ['Caramel Latte', 'Latte', 'Matcha Latte']);
   });
 
   testWidgets('TC-08: "pizza" shows a no-result message', (tester) async {

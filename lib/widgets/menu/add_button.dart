@@ -51,15 +51,3 @@ class SoldOutTag extends StatelessWidget {
     );
   }
 }
-
-/// What "+" does for now. The next step (drink options) replaces this
-/// with opening the customization page.
-void showAddComingSoon(BuildContext context, Product product) {
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(
-        content: Text('Choosing options for ${product.name} comes next.'),
-      ),
-    );
-}

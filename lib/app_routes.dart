@@ -10,6 +10,10 @@ abstract final class AppRoutes {
   static const orders = '/orders';
   static const profile = '/profile';
 
+  /// Drink customization, opened over the tabs.
+  static const productPattern = '/product/:id';
+  static String product(int id) => '/product/$id';
+
   /// Pages for people who are not signed in. Everything else needs a
   /// session (customer or guest).
   static const authPages = {login, signUp, forgotPassword, resetPassword};

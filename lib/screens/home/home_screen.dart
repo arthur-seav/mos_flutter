@@ -10,7 +10,6 @@ import '../../widgets/common/square_icon_button.dart';
 import '../../controllers/auth/auth_controller.dart';
 import '../../controllers/menu/menu_filter_controller.dart';
 import '../../controllers/menu/menu_providers.dart';
-import '../../widgets/menu/add_button.dart';
 import '../../widgets/menu/menu_search_field.dart';
 import '../../widgets/menu/product_card.dart';
 import '../../controllers/home/greeting.dart';
@@ -135,7 +134,7 @@ class _PopularGrid extends ConsumerWidget {
           itemCount: value.length,
           itemBuilder: (context, i) => ProductCard(
             product: value[i],
-            onAdd: () => showAddComingSoon(context, value[i]),
+            onAdd: () => context.push(AppRoutes.product(value[i].id)),
           ),
         ),
       ),

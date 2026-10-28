@@ -43,16 +43,17 @@ lib/
 ├── app_routes.dart      # route paths
 ├── router.dart          # all routes + login redirect (go_router)
 ├── screens/             # full pages: they read controllers and draw, no logic
-│   ├── auth/  home/  menu/  orders/  account/
+│   ├── auth/  home/  menu/  orders/  account/   # menu/ includes customize_drink_screen
 │   └── shell/           # bottom navigation (Home / Menu / Orders / Profile)
 ├── controllers/         # logic: Riverpod providers and Notifiers, no widgets
-│   ├── auth/  home/  menu/
+│   ├── auth/  home/  menu/  cart/
 │   └── common/          # SubmitStateMixin (loading / error for form buttons)
 ├── widgets/             # pieces of screens
 │   ├── common/          # used by several features (buttons, fields, empty state...)
 │   ├── auth/  menu/     # used by one feature's screens (menu widgets are also on Home)
 ├── data/
-│   ├── models/          # User, Product, Category, MenuCatalog, Money... (SA data dictionary)
+│   ├── models/          # User, Product, Category, MenuCatalog, Money, DrinkOption,
+│   │                    # DrinkSelection (BR-01..03), CartItem ... (SA data dictionary)
 │   ├── repositories/    # abstract interfaces the UI depends on (NFR-09)
 │   ├── mock/            # in-memory implementations used until the backend exists
 │   └── repository_providers.dart
@@ -87,6 +88,8 @@ lib/
 | `widgets/common/square_icon_button.dart` | White square icon button: back, search, cart. |
 | `widgets/common/empty_state.dart` | "Nothing here" / "Could not load" message with an optional button. |
 | `data/models/money.dart` | Prices as whole cents, so totals never have floating-point errors. |
+| `widgets/common/selectable_pill.dart` | Rounded choice button: category chips and drink options. |
+| `widgets/common/quantity_selector.dart` | "− 1 +" on the drink page (and the cart next). |
 | `widgets/menu/` | Drink picture, add button / sold-out tag, category chips, search box, drink card and row (also used by Home). |
 | `widgets/auth/` | Auth-page pieces: back button, title, status page (success / verifying), footer link. |
 
@@ -101,9 +104,15 @@ All use the password `password123`. Accounts you create and passwords you reset 
 | `inactive@example.com` | Deactivated, refused |
 | `staff@mos.coffee` | Staff, refused: staff use the admin dashboard (FR-05) |
 
-The demo menu has 4 categories and 16 drinks. **Mocha is sold out**, to show TC-09.
+The demo menu has 4 categories and 17 drinks. **Mocha is sold out**, to show TC-09.
+Drink options follow the test cases: Espresso is hot only (TC-10), Caramel Latte opens with the Figma defaults (TC-11), Americano has no default size (TC-12) and Large +$0.50 (TC-15), Latte is $3.00 with Large +$1.00 (TC-14).
 
 To try **Forgot password**, use `012 345 678` or `098 765 432`; any other number gives "Account not found." (TC-06).
+
+## Open questions for the SA document
+
+- **Ice level for hot drinks (BR-01).** The data dictionary has no way to say "this group only applies to iced drinks". The app adds two fields: `OptionGroup.needsIcedDrink` (true for Ice level) and `DrinkOption.isIced` (true for Iced). The backend needs the same, or a fixed rule.
+- **Options a drink does not offer (TC-10: Espresso is Hot only).** `product_options` is described as a price override only. The app also reads it as "the options this drink offers" when a drink has rows for a group.
 
 ## Fonts
 
