@@ -22,31 +22,46 @@ flutter analyze          # lints
 
 To preview in a browser: `flutter run -d chrome`.
 
+## Packages
+
+| Package | Why |
+|---|---|
+| `flutter_riverpod` 3.3.x | State management. 3.3.x is the newest line that supports Dart 3.11. |
+| `go_router` 17.x | Routing, bottom tabs, redirect to login when there is no session. |
+| `email_validator` | Email format check. |
+| `phone_numbers_parser` | Phone number check (Dart port of Google's libphonenumber). |
+
 ## Project structure
 
 ```
 lib/
-├── main.dart            # entry point
+├── main.dart            # entry point; chooses mock or API repositories (NFR-09)
 ├── app.dart             # MaterialApp + theme + router
-├── router.dart          # all routes (go_router)
+├── app_routes.dart      # route paths
+├── router.dart          # all routes + login redirect (go_router)
 ├── core/
+│   ├── forms/           # SubmitStateMixin: loading / error for form buttons
 │   ├── theme/           # SA 4.1 design guidelines: colors (DG-C*), text styles (DG-F*), ThemeData
-│   ├── utils/           # small helpers (form validators)
+│   ├── utils/           # form validators
 │   └── widgets/         # widgets shared across features
 ├── data/
-│   ├── models/          # User, ... (mirror the SA data dictionary)
+│   ├── models/          # User, SignUpRequest (mirror the SA data dictionary)
 │   ├── repositories/    # abstract interfaces the UI depends on (NFR-09)
-│   └── mock/            # in-memory implementations used until the backend exists
+│   ├── mock/            # in-memory implementations used until the backend exists
+│   └── repository_providers.dart
 └── features/
-    ├── auth/            # login page + AuthController (session state)
+    ├── auth/            # login, sign up, forgot / reset password + AuthController
     ├── shell/           # bottom navigation (Home / Menu / Orders / Profile)
     ├── home/  menu/  orders/  account/
 ```
 
 ### How the layers talk
 
-`Screen` → `Controller` (ChangeNotifier, via provider) → `Repository` interface → `Mock…Repository` today, `Api…Repository` later.
-Only `main.dart` chooses the implementation, so switching to the real API does not touch any screen.
+`Screen` → `AuthController` (Riverpod `Notifier`) → `AuthRepository` interface → `MockAuthRepository` today, `ApiAuthRepository` later.
+
+- Screens read state with `ref.watch(authControllerProvider)` and call actions through `ref.read(authControllerProvider.notifier)`.
+- `main.dart` picks the repository with `ProviderScope(overrides: ...)`; tests pass a zero-latency mock the same way. Switching to the real API does not touch any screen.
+- The router watches the session: with no session only the auth pages open; once signed in (or guest) the auth pages send you to Home.
 
 ### Shared modules
 
@@ -55,13 +70,17 @@ Only `main.dart` chooses the implementation, so switching to the real API does n
 | `core/theme/app_colors.dart` | The 14 theme colors from SA 4.1.2. Never write hex codes in widgets. |
 | `core/theme/app_text_styles.dart` | The 8 text styles from SA 4.1.1. |
 | `core/theme/app_theme.dart` | Turns the two files above into `ThemeData`, so plain Material widgets match the Figma design. |
-| `core/utils/validators.dart` | Email / Cambodian phone checks for every form. |
-| `core/widgets/labeled_text_field.dart` | Label + icon text field used by the auth and profile forms. |
+| `core/utils/validators.dart` | Email / phone / password / name checks for every form. |
+| `core/forms/submit_state.dart` | Loading and error state for a form's submit button (`AsyncValue`). |
+| `core/widgets/labeled_text_field.dart` | Label + icon text field; can also show a server error under the field. |
+| `core/widgets/loading_button.dart` | Main button with a spinner while busy. |
+| `core/widgets/error_banner.dart` | Red box for a form-level error. |
 | `core/widgets/or_divider.dart` | The "— or —" line between two actions. |
+| `features/auth/widgets/` | Auth-page pieces: back button, title, status page (success / verifying), footer link. |
 
 ## Demo accounts (mock data)
 
-All use the password `password123`.
+All use the password `password123`. Accounts you create and passwords you reset last until the app is closed.
 
 | Account | Result |
 |---|---|
@@ -70,11 +89,19 @@ All use the password `password123`.
 | `inactive@example.com` | Deactivated, refused |
 | `staff@mos.coffee` | Staff, refused: staff use the admin dashboard (FR-05) |
 
+To try **Forgot password**, use `012 345 678` or `098 765 432`; any other number gives "Account not found." (TC-06).
+
 ## Screenshots
 
-| Login vs Figma | Wrong password (TC-04) |
+Left: Figma. Right: app.
+
+| Login | Sign up |
 |---|---|
-| ![](docs/screenshots/login-vs-figma.png) | ![](docs/screenshots/login-wrong-password.png) |
+| ![](docs/screenshots/login-vs-figma.png) | ![](docs/screenshots/signup-vs-figma.png) |
+
+| Forgot password: not found (TC-06) | Verifying | New password |
+|---|---|---|
+| ![](docs/screenshots/forgot-not-found-vs-figma.png) | ![](docs/screenshots/verifying-vs-figma.png) | ![](docs/screenshots/reset-vs-figma.png) |
 
 ## Fonts
 

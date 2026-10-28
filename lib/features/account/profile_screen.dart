@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/placeholder_page.dart';
@@ -7,12 +7,12 @@ import '../auth/auth_controller.dart';
 
 /// Placeholder until the Account step. For now it only shows who is signed
 /// in and lets them sign out (FR-03), so the login flow can be tried again.
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final auth = context.watch<AuthController>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(authControllerProvider);
     final who = auth.isGuest ? 'Guest' : auth.user?.fullName ?? '';
 
     return PlaceholderPage(
@@ -25,7 +25,8 @@ class ProfileScreen extends StatelessWidget {
         SizedBox(
           width: 200,
           child: OutlinedButton(
-            onPressed: auth.isBusy ? null : auth.signOut,
+            onPressed: () =>
+                ref.read(authControllerProvider.notifier).signOut(),
             child: Text(auth.isGuest ? 'Back to sign in' : 'Sign out'),
           ),
         ),
