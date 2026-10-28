@@ -26,7 +26,11 @@ void main() {
     return container;
   }
 
-  Finder pill(String label) => find.widgetWithText(SelectablePill, label);
+  /// A choice button by its text; for size and shots that is the name
+  /// and the price under it, e.g. "Large +$0.50".
+  Finder pill(String label) => find.byWidgetPredicate(
+    (w) => w is SelectablePill && w.fullLabel == label,
+  );
 
   /// For labels used by two groups ("Less", "Regular", "Extra").
   Finder pillIn(String group, String label) => find.descendant(
@@ -102,6 +106,32 @@ void main() {
 
     await tapPill(tester, r'Single -$0.50');
     expect(buttonText(tester), r'Add to cart · $1.50');
+  });
+
+  testWidgets('size and shots stay in one row, price under the name', (
+    tester,
+  ) async {
+    await openDrink(tester, 'Espresso');
+    final rows = [
+      r'Single -$0.50',
+      r'Double +$0.00',
+      r'Triple +$0.50',
+    ].map((l) => tester.getTopLeft(pill(l)).dy).toSet();
+    expect(rows, hasLength(1));
+    expect(
+      find.descendant(
+        of: pill(r'Single -$0.50'),
+        matching: find.text('Single'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: pill(r'Single -$0.50'),
+        matching: find.text(r'-$0.50'),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('size prices are shown against the current choice', (

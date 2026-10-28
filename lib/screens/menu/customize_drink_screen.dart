@@ -140,6 +140,8 @@ class _Details extends ConsumerWidget {
                       group: group,
                       isChosen: (option) => selection.isChosen(group, option),
                       labelOf: (option) => selection.labelOf(group, option),
+                      priceOf: (option) => selection.priceOf(group, option),
+                      pricesInRow: selection.hasPriceChoice(group),
                       canChoose: (option) => selection.canChoose(group, option),
                       onChoose: (option) => choose(group, option),
                       highlightMissing: missing.contains(group.group.id),

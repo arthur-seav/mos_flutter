@@ -13,6 +13,8 @@ class OptionGroupSection extends StatelessWidget {
     required this.group,
     required this.isChosen,
     required this.labelOf,
+    required this.priceOf,
+    required this.pricesInRow,
     required this.canChoose,
     required this.onChoose,
     this.highlightMissing = false,
@@ -23,6 +25,16 @@ class OptionGroupSection extends StatelessWidget {
 
   /// The button text, e.g. "Large +$0.50" (see DrinkSelection.labelOf).
   final String Function(DrinkOption option) labelOf;
+
+  /// Just the price part, or null (see DrinkSelection.priceOf).
+  final String? Function(DrinkOption option) priceOf;
+
+  /// Size and shots: one row of equal buttons with the price under the
+  /// name, so a longer price never pushes an option to a second line.
+  final bool pricesInRow;
+
+  /// At most this many options fit in one row on a phone.
+  static const maxInRow = 4;
 
   /// False for options that would go over the group's limit; they are
   /// shown faded and cannot be tapped (BR-02, TC-13).
@@ -57,19 +69,37 @@ class OptionGroupSection extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final option in group.options)
-              SelectablePill(
-                label: labelOf(option),
-                selected: isChosen(option),
-                enabled: canChoose(option),
-                onTap: () => onChoose(option),
-              ),
-          ],
-        ),
+        if (pricesInRow && group.options.length <= maxInRow)
+          Row(
+            children: [
+              for (final (i, option) in group.options.indexed) ...[
+                if (i > 0) const SizedBox(width: 8),
+                Expanded(
+                  child: SelectablePill(
+                    label: option.name,
+                    subtitle: priceOf(option),
+                    selected: isChosen(option),
+                    enabled: canChoose(option),
+                    onTap: () => onChoose(option),
+                  ),
+                ),
+              ],
+            ],
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final option in group.options)
+                SelectablePill(
+                  label: labelOf(option),
+                  selected: isChosen(option),
+                  enabled: canChoose(option),
+                  onTap: () => onChoose(option),
+                ),
+            ],
+          ),
       ],
     );
   }

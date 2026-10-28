@@ -171,7 +171,7 @@ void main() {
     final size = group(americano, 'Size');
     expect(
       size.options.map((o) => americano.labelOf(size, o)).join(', '),
-      r'Small, Medium +$0.50, Large +$0.50',
+      r'Small +$0.00, Medium +$0.50, Large +$0.50',
     );
   });
 
