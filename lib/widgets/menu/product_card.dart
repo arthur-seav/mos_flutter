@@ -15,7 +15,7 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final card = Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -52,6 +52,12 @@ class ProductCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+    // Tapping the card opens the drink too, unless it is sold out.
+    return GestureDetector(
+      onTap: product.isSoldOut ? null : onAdd,
+      behavior: HitTestBehavior.opaque,
+      child: card,
     );
   }
 }

@@ -11,6 +11,7 @@ import 'screens/auth/login_screen.dart';
 import 'screens/auth/reset_password_screen.dart';
 import 'screens/auth/sign_up_screen.dart';
 import 'screens/home/home_screen.dart';
+import 'screens/menu/customize_drink_screen.dart';
 import 'screens/menu/menu_screen.dart';
 import 'screens/orders/orders_screen.dart';
 import 'screens/shell/main_shell.dart';
@@ -65,6 +66,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoutes.productPattern,
+        builder: (context, state) => CustomizeDrinkScreen(
+          productId: int.parse(state.pathParameters['id']!),
+        ),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => MainShell(navigationShell: shell),

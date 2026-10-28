@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/data/mock/mock_auth_repository.dart';
 import 'package:mos_app/screens/home/home_screen.dart';
+import 'package:mos_app/screens/menu/customize_drink_screen.dart';
 import 'package:mos_app/screens/menu/menu_screen.dart';
+import 'package:mos_app/widgets/menu/category_chips.dart';
 import 'package:mos_app/widgets/menu/product_card.dart';
 
 import '../../helpers.dart';
@@ -34,16 +36,10 @@ void main() {
     expect(find.text('Dara'), findsOneWidget);
   });
 
-  testWidgets('a category chip opens Menu on that category', (tester) async {
+  testWidgets('Home has no category chips (they live on Menu)', (tester) async {
     await pumpMosApp(tester);
     await continueAsGuest(tester);
-
-    await tester.tap(find.text('Tea'));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(MenuScreen), findsOneWidget);
-    expect(find.text('Matcha Latte'), findsOneWidget);
-    expect(find.text('Espresso'), findsNothing);
+    expect(find.byType(CategoryChips), findsNothing);
   });
 
   testWidgets('"See all" opens Menu on All', (tester) async {
@@ -68,15 +64,13 @@ void main() {
     expect(find.byTooltip('Close search'), findsOneWidget);
   });
 
-  testWidgets('"+" says customization comes next', (tester) async {
+  testWidgets('"+" opens the drink\'s options', (tester) async {
     await pumpMosApp(tester);
     await continueAsGuest(tester);
 
     await tester.tap(find.byTooltip('Add Caramel Latte'));
-    await tester.pump();
-    expect(
-      find.text('Choosing options for Caramel Latte comes next.'),
-      findsOneWidget,
-    );
+    await tester.pumpAndSettle();
+    expect(find.byType(CustomizeDrinkScreen), findsOneWidget);
+    expect(find.text('Caramel Latte'), findsOneWidget);
   });
 }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../app_routes.dart';
 
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
@@ -8,7 +11,6 @@ import '../../widgets/common/square_icon_button.dart';
 import '../../data/models/menu_catalog.dart';
 import '../../controllers/menu/menu_filter_controller.dart';
 import '../../controllers/menu/menu_providers.dart';
-import '../../widgets/menu/add_button.dart';
 import '../../widgets/menu/category_chips.dart';
 import '../../widgets/menu/menu_search_field.dart';
 import '../../widgets/menu/product_tile.dart';
@@ -182,7 +184,7 @@ class _SectionList extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 12),
               child: ProductTile(
                 product: product,
-                onAdd: () => showAddComingSoon(context, product),
+                onAdd: () => context.push(AppRoutes.product(product.id)),
               ),
             ),
         ],
