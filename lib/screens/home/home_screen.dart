@@ -11,15 +11,14 @@ import '../../controllers/auth/auth_controller.dart';
 import '../../controllers/menu/menu_filter_controller.dart';
 import '../../controllers/menu/menu_providers.dart';
 import '../../widgets/menu/add_button.dart';
-import '../../widgets/menu/category_chips.dart';
 import '../../widgets/menu/menu_search_field.dart';
 import '../../widgets/menu/product_card.dart';
 import '../../controllers/home/greeting.dart';
 
 /// SA 2.0 §4.2.2.1 Home (Figma: Home, Home with Guest).
 ///
-/// Greeting, cart button, drink search and "Popular now". Search and the
-/// category chips open the Menu tab already filtered.
+/// Greeting, cart button, drink search and "Popular now". The search box
+/// opens the Menu tab with search ready; categories are on the Menu tab.
 /// (The order status card from "Home screen with Order processing" comes
 /// with order tracking.)
 class HomeScreen extends ConsumerWidget {
@@ -30,7 +29,6 @@ class HomeScreen extends ConsumerWidget {
     final session = ref.watch(authControllerProvider);
     final name = session.user?.firstName ?? 'Guest';
     final filter = ref.read(menuFilterProvider.notifier);
-    final categories = ref.watch(menuCatalogProvider).value?.categories ?? [];
 
     void openMenu() => context.go(AppRoutes.menu);
 
@@ -76,18 +74,7 @@ class HomeScreen extends ConsumerWidget {
                       openMenu();
                     },
                   ),
-                  const SizedBox(height: 20),
                 ],
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: CategoryChips(
-                categories: categories,
-                selectedId: null,
-                onSelected: (id) {
-                  filter.selectCategory(id);
-                  openMenu();
-                },
               ),
             ),
             SliverPadding(
