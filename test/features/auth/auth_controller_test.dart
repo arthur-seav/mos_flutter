@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/data/mock/mock_auth_repository.dart';
+import 'package:mos_app/data/models/sign_up_request.dart';
 import 'package:mos_app/data/repositories/auth_repository.dart';
 import 'package:mos_app/features/auth/auth_controller.dart';
 
@@ -60,6 +61,27 @@ void main() {
     expect(session().isGuest, isTrue);
     expect(session().hasSession, isTrue);
     expect(session().user, isNull);
+  });
+
+  test('createAccount does not sign in until startSession', () async {
+    final user = await controller().createAccount(
+      const SignUpRequest(
+        fullName: 'Sophat Samnang',
+        email: 'new@example.com',
+        password: 'longenough',
+      ),
+    );
+    expect(session().hasSession, isFalse);
+
+    controller().startSession(user);
+    expect(session().isCustomer, isTrue);
+    expect(session().user?.email, 'new@example.com');
+  });
+
+  test('password reset does not change the session', () async {
+    final ticket = await controller().verifyAccountForReset(phone: '012345678');
+    await controller().resetPassword(ticket: ticket, newPassword: 'brand-new');
+    expect(session().hasSession, isFalse);
   });
 
   test('sign out clears the session', () async {

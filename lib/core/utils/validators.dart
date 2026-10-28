@@ -57,3 +57,40 @@ String? validateRequiredPassword(String? value) {
   if (value == null || value.isEmpty) return 'Enter your password.';
   return null;
 }
+
+/// Minimum password length for new accounts and resets (TC-02: 8+).
+const minPasswordLength = 8;
+
+String? validateNewPassword(String? value) {
+  if (value == null || value.isEmpty) return 'Enter a password.';
+  if (value.length < minPasswordLength) {
+    return 'Use at least $minPasswordLength characters.';
+  }
+  return null;
+}
+
+String? validateFullName(String? value) {
+  if (value == null || value.trim().isEmpty) return 'Enter your name.';
+  return null;
+}
+
+/// For forms where the email is optional: empty is fine, but if something
+/// is typed it must be a valid email.
+String? validateOptionalEmail(String? value) {
+  final text = value?.trim() ?? '';
+  if (text.isEmpty || isEmail(text)) return null;
+  return 'Enter a valid email.';
+}
+
+/// Same as [validateOptionalEmail], for a mobile number.
+String? validateOptionalPhone(String? value) {
+  final text = value?.trim() ?? '';
+  if (text.isEmpty || isPhone(text)) return null;
+  return 'Enter a valid mobile number.';
+}
+
+String? validatePhone(String? value) {
+  final text = value?.trim() ?? '';
+  if (text.isEmpty) return 'Enter your phone number.';
+  return validateOptionalPhone(text);
+}

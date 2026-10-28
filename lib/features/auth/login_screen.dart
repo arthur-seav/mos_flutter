@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../app_routes.dart';
 
 import '../../core/forms/submit_state.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/validators.dart';
 import '../../core/widgets/error_banner.dart';
 import '../../core/widgets/labeled_text_field.dart';
 import '../../core/widgets/loading_button.dart';
 import '../../core/widgets/or_divider.dart';
 import 'auth_controller.dart';
+import 'widgets/auth_footer_link.dart';
+import 'widgets/auth_title.dart';
 import 'widgets/brand_header.dart';
 
 /// SA 2.0 §4.2.1.1 Login (Figma: 1.1_Login).
@@ -50,14 +53,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
-  void _showNotReady(String feature) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text('$feature is coming in a later step.')),
-      );
-  }
-
   @override
   Widget build(BuildContext context) {
     final error = submitError;
@@ -74,13 +69,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   children: [
                     const BrandHeader(),
                     const SizedBox(height: 32),
-                    const Text('Welcome back', style: AppTextStyles.pageTitle),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Sign in to order ahead and skip the queue.',
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                    const AuthTitle(
+                      title: 'Welcome back',
+                      subtitle: 'Sign in to order ahead and skip the queue.',
                     ),
                     const SizedBox(height: 24),
                     AutofillGroup(
@@ -123,7 +114,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       child: Padding(
                         padding: const EdgeInsets.only(top: 12),
                         child: TextButton(
-                          onPressed: () => _showNotReady('Password reset'),
+                          onPressed: isSubmitting
+                              ? null
+                              : () => context.push(AppRoutes.forgotPassword),
                           child: const Text('Forgot password?'),
                         ),
                       ),
@@ -160,7 +153,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   alignment: Alignment.bottomCenter,
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
-                    child: _SignUpPrompt(onTap: () => _showNotReady('Sign up')),
+                    child: AuthFooterLink(
+                      prompt: 'New here?',
+                      action: 'Create an account',
+                      onTap: isSubmitting
+                          ? null
+                          : () => context.push(AppRoutes.signUp),
+                    ),
                   ),
                 ),
               ),
@@ -168,26 +167,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           ),
         ),
       ),
-    );
-  }
-}
-
-class _SignUpPrompt extends StatelessWidget {
-  const _SignUpPrompt({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          'New here?',
-          style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
-        ),
-        TextButton(onPressed: onTap, child: const Text('Create an account')),
-      ],
     );
   }
 }

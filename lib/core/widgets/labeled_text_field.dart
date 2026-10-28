@@ -19,6 +19,7 @@ class LabeledTextField extends StatelessWidget {
     this.autofillHints,
     this.obscureText = false,
     this.enabled = true,
+    this.errorText,
   });
 
   final String label;
@@ -33,6 +34,10 @@ class LabeledTextField extends StatelessWidget {
   final Iterable<String>? autofillHints;
   final bool obscureText;
   final bool enabled;
+
+  /// An error that comes from outside the field's [validator], such as
+  /// "Account not found." from the server. Shown until it is cleared.
+  final String? errorText;
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +56,7 @@ class LabeledTextField extends StatelessWidget {
           autofillHints: autofillHints,
           obscureText: obscureText,
           enabled: enabled,
+          forceErrorText: errorText,
           style: AppTextStyles.body,
           decoration: InputDecoration(
             hintText: hintText,

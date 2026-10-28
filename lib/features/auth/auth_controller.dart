@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/models/sign_up_request.dart';
 import '../../data/models/user.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repository_providers.dart';
@@ -42,7 +43,8 @@ final authControllerProvider = NotifierProvider<AuthController, AuthState>(
   AuthController.new,
 );
 
-/// Runs sign in / guest / sign out and holds the resulting [AuthState].
+/// Runs every account action (sign in, sign up, guest, sign out, password
+/// reset) and holds the resulting [AuthState].
 ///
 /// Methods that can fail throw [AuthException] with a message for the user;
 /// each form shows it (see `SubmitStateMixin`).
@@ -65,7 +67,29 @@ class AuthController extends Notifier<AuthState> {
     state = AuthState.customer(user);
   }
 
+  /// Creates a customer account (FR-02) **without** signing in yet, so the
+  /// sign-up screen can show its success message first. Call
+  /// [startSession] with the returned user afterwards.
+  Future<User> createAccount(SignUpRequest request) =>
+      _repository.signUp(request);
+
+  /// Signs in a user that was just created by [createAccount].
+  void startSession(User user) {
+    _ensureCanUseApp(user);
+    state = AuthState.customer(user);
+  }
+
   void continueAsGuest() => state = const AuthState.guest();
+
+  /// Forgot password, step 1 (SA §4.2.1.3). Does not change the session.
+  Future<PasswordResetTicket> verifyAccountForReset({required String phone}) =>
+      _repository.verifyAccountForReset(phone: phone);
+
+  /// Forgot password, step 2. The user signs in with the new password after.
+  Future<void> resetPassword({
+    required PasswordResetTicket ticket,
+    required String newPassword,
+  }) => _repository.resetPassword(ticket: ticket, newPassword: newPassword);
 
   Future<void> signOut() async {
     if (state.isCustomer) await _repository.signOut();
