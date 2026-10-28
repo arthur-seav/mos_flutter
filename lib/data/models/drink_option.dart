@@ -73,9 +73,9 @@ class DrinkOption {
   /// [OptionGroup.needsIcedDrink].
   final bool isIced;
 
-  /// "Medium +$0.50", or just "Small" when it is free.
+  /// "Medium +$0.50", "Single -$0.50", or just "Small" when it is free.
   String get label =>
-      extraPrice == Money.zero ? name : '$name +${extraPrice.format()}';
+      extraPrice == Money.zero ? name : '$name ${extraPrice.formatSigned()}';
 }
 
 /// A group as offered for one drink (data dictionary:

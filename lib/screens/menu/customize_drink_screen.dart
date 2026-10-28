@@ -10,6 +10,7 @@ import '../../theme/app_text_styles.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/quantity_selector.dart';
 import '../../widgets/common/square_icon_button.dart';
+import '../../widgets/common/top_toast.dart';
 import '../../widgets/menu/option_group_section.dart';
 import '../../widgets/menu/product_image.dart';
 
@@ -119,7 +120,7 @@ class _Details extends ConsumerWidget {
                         child: Text(product.name, style: AppTextStyles.title),
                       ),
                       Text(
-                        'from ${product.basePrice.format()}',
+                        'from ${selection.customization.lowestPrice.format()}',
                         style: AppTextStyles.price,
                       ),
                     ],
@@ -138,6 +139,7 @@ class _Details extends ConsumerWidget {
                     OptionGroupSection(
                       group: group,
                       isChosen: (option) => selection.isChosen(group, option),
+                      labelOf: (option) => selection.labelOf(group, option),
                       canChoose: (option) => selection.canChoose(group, option),
                       onChoose: (option) => choose(group, option),
                       highlightMissing: missing.contains(group.group.id),
@@ -181,24 +183,16 @@ class _AddToCartBar extends ConsumerWidget {
         // Read now: this page (and its ref) is gone when Undo is tapped.
         final cart = ref.read(cartControllerProvider.notifier);
         final item = update.item;
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(
-                'Added to cart · ${item.product.name}'
-                '${item.options.isEmpty ? '' : ' · ${item.optionSummary}'}',
-              ),
-              // Flutter keeps a SnackBar with an action open until it is
-              // tapped (persist defaults to true); close it like any other.
-              persist: false,
-              duration: const Duration(seconds: 4),
-              action: SnackBarAction(
-                label: 'Undo',
-                onPressed: () => cart.restore(update.before),
-              ),
-            ),
-          );
+        TopToast.show(
+          context,
+          title: 'Added to cart',
+          message: [
+            item.product.name,
+            if (item.options.isNotEmpty) item.optionSummary,
+          ].join(' · '),
+          actionLabel: 'Undo',
+          onAction: () => cart.restore(update.before),
+        );
       }
       context.pop();
     }

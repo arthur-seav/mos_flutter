@@ -154,7 +154,19 @@ class MockMenuRepository implements MenuRepository {
     maxSelect: 3,
   );
 
+  /// Espresso's "size": how many shots (BR-01: groups depend on the
+  /// drink). Required like Size (BR-02).
+  static const _shots = OptionGroup(
+    id: 6,
+    name: 'Shots',
+    selectionType: SelectionType.single,
+    isRequired: true,
+    maxSelect: 1,
+    summaryNoun: 'shot',
+  );
+
   static const small = 101, medium = 102, large = 103;
+  static const singleShot = 601, doubleShot = 602, tripleShot = 603;
   static const hot = 201, iced = 202;
   static const noIce = 301, lessIce = 302, regularIce = 303, extraIce = 304;
   static const noSugar = 401, lessSugar = 402, normalSugar = 403;
@@ -175,6 +187,23 @@ class MockMenuRepository implements MenuRepository {
         groupId: 1,
         name: 'Large',
         extraPrice: Money.dollars(1),
+      ),
+    ],
+    // Priced from the default double: a single is cheaper. For a 4th
+    // shot, add "Extra shot" from the add-ons.
+    _shots: [
+      DrinkOption(
+        id: singleShot,
+        groupId: 6,
+        name: 'Single',
+        extraPrice: Money.dollars(-0.5),
+      ),
+      const DrinkOption(id: doubleShot, groupId: 6, name: 'Double'),
+      DrinkOption(
+        id: tripleShot,
+        groupId: 6,
+        name: 'Triple',
+        extraPrice: Money.dollars(0.5),
       ),
     ],
     _temperature: const [
@@ -280,9 +309,10 @@ class MockMenuRepository implements MenuRepository {
 
   static List<ProductOptionGroup> _groupsFor(int productId) =>
       switch (productId) {
-        // TC-10: Espresso is hot only, so no ice level.
+        // TC-10: Espresso is hot only, so no ice level. Shots instead of
+        // a cup size, double by default.
         1 => [
-          _offer(_size, defaultId: medium),
+          _offer(_shots, defaultId: doubleShot),
           _offer(_temperature, defaultId: hot, only: [hot]),
           _offer(_sweetness, defaultId: noSugar),
           _offer(_addOns),

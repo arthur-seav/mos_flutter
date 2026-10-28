@@ -108,6 +108,23 @@ class DrinkSelection {
       if (g.group.isRequired && (chosen[g.group.id]?.isEmpty ?? true)) g,
   ];
 
+  /// What an option's button says. In a single-choice group whose options
+  /// cost different amounts (size, shots), the price is relative to the
+  /// current choice: "Small -$0.50 · Medium +$0.00 · Large +$0.50".
+  /// Add-ons keep their own price ("Oat milk +$0.60"), groups where every
+  /// option is free show just the name, and a group with nothing chosen
+  /// yet shows the stored prices.
+  String labelOf(ProductOptionGroup group, DrinkOption option) {
+    if (group.group.isMultiple) return option.label;
+    final prices = group.options.map((o) => o.extraPrice).toSet();
+    if (prices.length < 2) return option.label;
+    final ids = chosen[group.group.id] ?? const <int>[];
+    final current = ids.isEmpty ? null : group.optionById(ids.first);
+    if (current == null) return option.label;
+    return '${option.name} '
+        '${(option.extraPrice - current.extraPrice).formatSigned()}';
+  }
+
   /// TC-13: false when this would go over the group's limit.
   bool canChoose(ProductOptionGroup group, DrinkOption option) {
     if (!group.group.isMultiple || isChosen(group, option)) return true;

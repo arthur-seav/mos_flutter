@@ -12,6 +12,7 @@ class OptionGroupSection extends StatelessWidget {
     super.key,
     required this.group,
     required this.isChosen,
+    required this.labelOf,
     required this.canChoose,
     required this.onChoose,
     this.highlightMissing = false,
@@ -19,6 +20,9 @@ class OptionGroupSection extends StatelessWidget {
 
   final ProductOptionGroup group;
   final bool Function(DrinkOption option) isChosen;
+
+  /// The button text, e.g. "Large +$0.50" (see DrinkSelection.labelOf).
+  final String Function(DrinkOption option) labelOf;
 
   /// False for options that would go over the group's limit; they are
   /// shown faded and cannot be tapped (BR-02, TC-13).
@@ -59,7 +63,7 @@ class OptionGroupSection extends StatelessWidget {
           children: [
             for (final option in group.options)
               SelectablePill(
-                label: option.label,
+                label: labelOf(option),
                 selected: isChosen(option),
                 enabled: canChoose(option),
                 onTap: () => onChoose(option),

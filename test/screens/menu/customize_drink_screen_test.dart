@@ -58,7 +58,7 @@ void main() {
     tester,
   ) async {
     await openDrink(tester, 'Caramel Latte');
-    for (final label in [r'Medium +$0.50', 'Iced']) {
+    for (final label in [r'Medium +$0.00', 'Iced']) {
       expect(isSelected(tester, label), isTrue, reason: label);
     }
     bool selectedIn(String group, String label) =>
@@ -67,10 +67,11 @@ void main() {
     expect(selectedIn('Sweetness', 'Regular'), isTrue);
     expect(find.text(r'from $3.50'), findsOneWidget);
     // Pills are as wide as their text and sit side by side, not one per row.
-    expect(tester.getSize(pill('Small')).width, lessThan(120));
+    // Not the full row (364); the test font is wider than DM Sans.
+    expect(tester.getSize(pill(r'Small -$0.50')).width, lessThan(300));
     expect(
-      tester.getTopLeft(pill('Small')).dy,
-      tester.getTopLeft(pill(r'Medium +$0.50')).dy,
+      tester.getTopLeft(pill('Hot')).dy,
+      tester.getTopLeft(pill('Iced')).dy,
     );
     expect(buttonText(tester), r'Add to cart · $4.00');
   });
@@ -82,6 +83,41 @@ void main() {
     expect(find.text('Ice level'), findsNothing);
     expect(pill('Iced'), findsNothing);
     expect(isSelected(tester, 'Hot'), isTrue);
+  });
+
+  testWidgets('Espresso: shots instead of a cup size, double by default', (
+    tester,
+  ) async {
+    await openDrink(tester, 'Espresso');
+    expect(find.text('Size'), findsNothing);
+    expect(find.text('Shots'), findsOneWidget);
+    expect(isSelected(tester, r'Double +$0.00'), isTrue);
+    expect(pill(r'Single -$0.50'), findsOneWidget);
+    expect(pill(r'Triple +$0.50'), findsOneWidget);
+    // "Extra shot" stays in the add-ons, for a 4th shot.
+    expect(pill(r'Extra shot +$0.50'), findsOneWidget);
+    expect(buttonText(tester), r'Add to cart · $2.00');
+    // "from" is the cheapest way to have it: a single shot.
+    expect(find.text(r'from $1.50'), findsOneWidget);
+
+    await tapPill(tester, r'Single -$0.50');
+    expect(buttonText(tester), r'Add to cart · $1.50');
+  });
+
+  testWidgets('size prices are shown against the current choice', (
+    tester,
+  ) async {
+    await openDrink(tester, 'Caramel Latte');
+    for (final label in [r'Small -$0.50', r'Medium +$0.00', r'Large +$0.50']) {
+      expect(pill(label), findsOneWidget, reason: label);
+    }
+    await tapPill(tester, r'Large +$0.50');
+    for (final label in [r'Small -$1.00', r'Medium -$0.50', r'Large +$0.00']) {
+      expect(pill(label), findsOneWidget, reason: label);
+    }
+    // Free groups show no price; add-ons keep their own price.
+    expect(pill('Hot'), findsOneWidget);
+    expect(pill(r'Oat milk +$0.60'), findsOneWidget);
   });
 
   testWidgets('BR-01: choosing Hot hides the ice level', (tester) async {
@@ -96,7 +132,7 @@ void main() {
   ) async {
     await openDrink(tester, 'Latte');
     expect(buttonText(tester), r'Add to cart · $3.50');
-    await tapPill(tester, r'Large +$1.00');
+    await tapPill(tester, r'Large +$0.50');
     expect(buttonText(tester), r'Add to cart · $4.00');
     await tapPill(tester, r'Oat milk +$0.60');
     expect(buttonText(tester), r'Add to cart · $4.60');
@@ -183,12 +219,19 @@ void main() {
       cart.single.optionSummary,
       'Medium · Iced · Less ice · Regular sugar',
     );
+    // Figma: a notice at the top with a check, the drink and Undo.
+    expect(find.text('Added to cart'), findsOneWidget);
     expect(
-      find.text(
-        'Added to cart · Caramel Latte · Medium · Iced · Less ice · Regular sugar',
-      ),
+      find.text('Caramel Latte · Medium · Iced · Less ice · Regular sugar'),
       findsOneWidget,
     );
+    expect(tester.getTopLeft(find.text('Added to cart')).dy, lessThan(150));
+    expect(find.byType(SnackBar), findsNothing);
+
+    // It closes by itself.
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    expect(find.text('Added to cart'), findsNothing);
   });
 
   testWidgets('Undo on "Added to cart" takes the drink back out', (
@@ -208,11 +251,11 @@ void main() {
     tester,
   ) async {
     final container = await openDrink(tester, 'Latte');
-    await tapPill(tester, r'Large +$1.00');
+    await tapPill(tester, r'Large +$0.50');
     await tester.tap(addToCartButton());
     await tester.pumpAndSettle();
     final line = container.read(cartControllerProvider).single;
-    // Let the "Added to cart" bar go away first.
+    // Let the "Added to cart" notice go away first.
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();
     expect(find.text('Undo'), findsNothing);
@@ -221,10 +264,10 @@ void main() {
         .read(routerProvider)
         .push(AppRoutes.product(line.product.id, line: line.lineId));
     await tester.pumpAndSettle();
-    expect(isSelected(tester, r'Large +$1.00'), isTrue);
+    expect(isSelected(tester, r'Large +$0.00'), isTrue);
     expect(buttonText(tester), r'Save changes · $4.00');
 
-    await tapPill(tester, 'Small');
+    await tapPill(tester, r'Small -$1.00');
     await tester.tap(find.byTooltip('Increase quantity'));
     await tester.pumpAndSettle();
     await tester.tap(find.text(r'Save changes · $6.00'));

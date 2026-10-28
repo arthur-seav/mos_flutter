@@ -141,6 +141,40 @@ void main() {
     );
   });
 
+  test('Espresso: shots, double by default; a single is cheaper', () async {
+    var s = await open(espresso);
+    expect(visible(s), ['Shots', 'Temperature', 'Sweetness', 'Add-ons']);
+    expect(s.unitPrice, Money.dollars(2));
+    s = pick(s, 'Shots', 'Single');
+    expect(s.unitPrice, Money.dollars(1.5));
+    s = pick(s, 'Shots', 'Triple');
+    s = pick(s, 'Add-ons', 'Extra shot');
+    expect(s.unitPrice, Money.dollars(3));
+    expect(
+      s.toCartItem().optionSummary,
+      'Triple shot · Hot · No sugar · Extra shot',
+    );
+  });
+
+  test('size labels are relative to the current choice', () async {
+    var s = await open(latte);
+    String labels(String g) =>
+        group(s, g).options.map((o) => s.labelOf(group(s, g), o)).join(', ');
+    expect(labels('Size'), r'Small -$0.50, Medium +$0.00, Large +$0.50');
+    s = pick(s, 'Size', 'Large');
+    expect(labels('Size'), r'Small -$1.00, Medium -$0.50, Large +$0.00');
+    expect(labels('Temperature'), 'Hot, Iced');
+    expect(labels('Add-ons'), startsWith(r'Oat milk +$0.60'));
+
+    // Nothing chosen yet (TC-12): the stored prices.
+    final americano = await open(2);
+    final size = group(americano, 'Size');
+    expect(
+      size.options.map((o) => americano.labelOf(size, o)).join(', '),
+      r'Small, Medium +$0.50, Large +$0.50',
+    );
+  });
+
   test('quantity stays between 1 and 20', () async {
     final s = await open(latte);
     expect(s.withQuantity(0).quantity, 1);

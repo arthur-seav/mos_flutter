@@ -108,6 +108,8 @@ All use the password `password123`. Accounts you create and passwords you reset 
 
 The demo menu has 4 categories and 17 drinks. **Mocha is sold out**, to show TC-09.
 Drink options follow the test cases: Espresso is hot only (TC-10), Caramel Latte opens with the Figma defaults (TC-11), Americano has no default size (TC-12) and Large +$0.50 (TC-15), Latte is $3.00 with Large +$1.00 (TC-14).
+Espresso has **Shots** instead of a cup size (BR-01): Single -$0.50, Double (default), Triple +$0.50; "Extra shot" stays in the add-ons for a 4th shot.
+Size and shot buttons show the price against the current choice ("Small -$0.50 · Medium +$0.00 · Large +$0.50"); the data keeps each option's own extra price (BR-03).
 
 The cart stays in the app until checkout (SA §3.5). Before checkout the app asks which drinks sold out and removes them (BR-05). `MockMenuRepository.markSoldOut(id)` stands in for staff marking a drink sold out, for TC-17 in the tests. "Go to checkout" stops at a message until the checkout step is built.
 
@@ -117,6 +119,7 @@ To try **Forgot password**, use `012 345 678` or `098 765 432`; any other number
 
 - **Ice level for hot drinks (BR-01).** The data dictionary has no way to say "this group only applies to iced drinks". The app adds two fields: `OptionGroup.needsIcedDrink` (true for Ice level) and `DrinkOption.isIced` (true for Iced). The backend needs the same, or a fixed rule.
 - **Short option names in cart lines.** Ice level and sweetness both use "Less / Regular / Extra". The app adds `OptionGroup.summaryNoun` ("ice", "sugar") so cart and order lines read "Less ice · Regular sugar".
+- **Negative extra prices.** Espresso's Single shot is -$0.50 from the default Double. `options.extra_price` is NUMERIC, so this fits, but the data dictionary only says "0 if free"; it should say discounts are allowed.
 - **Options a drink does not offer (TC-10: Espresso is Hot only).** `product_options` is described as a price override only. The app also reads it as "the options this drink offers" when a drink has rows for a group.
 
 ## Fonts
