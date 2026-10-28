@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/data/mock/mock_auth_repository.dart';
+import 'package:mos_app/data/models/cart_item.dart';
+import 'package:mos_app/data/models/money.dart';
+import 'package:mos_app/data/models/product.dart';
+import 'package:mos_app/controllers/cart/cart_controller.dart';
+import 'package:mos_app/screens/cart/cart_screen.dart';
 import 'package:mos_app/screens/home/home_screen.dart';
 import 'package:mos_app/screens/menu/customize_drink_screen.dart';
 import 'package:mos_app/screens/menu/menu_screen.dart';
+import 'package:mos_app/widgets/common/count_badge.dart';
 import 'package:mos_app/widgets/menu/category_chips.dart';
 import 'package:mos_app/widgets/menu/product_card.dart';
 
@@ -72,5 +78,48 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(CustomizeDrinkScreen), findsOneWidget);
     expect(find.text('Caramel Latte'), findsOneWidget);
+  });
+
+  testWidgets('FR-10: the cart badge is hidden while the cart is empty', (
+    tester,
+  ) async {
+    await pumpMosApp(tester);
+    await continueAsGuest(tester);
+
+    expect(find.text('9+'), findsNothing);
+    expect(
+      find.descendant(of: find.byType(CountBadge), matching: find.byType(Text)),
+      findsNothing,
+    );
+  });
+
+  testWidgets('FR-10: the cart badge shows the count and opens the cart', (
+    tester,
+  ) async {
+    final container = await pumpMosApp(tester);
+    await continueAsGuest(tester);
+    container
+        .read(cartControllerProvider.notifier)
+        .add(
+          CartItem(
+            product: Product(
+              id: 18,
+              categoryId: 1,
+              name: 'Latte',
+              basePrice: Money.dollars(3),
+            ),
+            options: const [],
+            quantity: 2,
+          ),
+        );
+    await tester.pumpAndSettle();
+
+    expect(find.text('2'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Cart'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CartScreen), findsOneWidget);
+    expect(find.text('Your cart'), findsOneWidget);
   });
 }
