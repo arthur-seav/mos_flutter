@@ -107,7 +107,7 @@ All use the password `password123`. Accounts you create and passwords you reset 
 | `staff@mos.coffee` | Staff, refused: staff use the admin dashboard (FR-05) |
 
 The demo menu has 4 categories and 17 drinks. **Mocha is sold out**, to show TC-09.
-Drink options follow the test cases: Espresso is hot only (TC-10), Caramel Latte opens with the Figma defaults (TC-11), Americano has no default size (TC-12) and Large +$0.50 (TC-15), Latte is $3.00 with Large +$1.00 (TC-14).
+Drink options follow the test cases: Espresso is hot only (TC-10), Caramel Latte opens with the Figma defaults (TC-11), Americano has Large +$0.50 (TC-15), Latte is $3.00 with Large +$1.00 (TC-14). Every drink has a default in each required group, so TC-12 ("Please choose a size.") is checked in the tests with a repository that leaves the size default empty (`default_option_id` is nullable).
 Espresso has **Shots** instead of a cup size (BR-01): Single -$0.50, Double (default), Triple +$0.50; "Extra shot" stays in the add-ons for a 4th shot.
 Size and shot buttons show the price against the current choice ("Small -$0.50 · Medium +$0.00 · Large +$0.50"); the data keeps each option's own extra price (BR-03).
 

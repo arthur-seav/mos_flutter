@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/controllers/cart/cart_controller.dart';
+import 'package:mos_app/data/repositories/menu_repository.dart';
 import 'package:mos_app/router.dart';
 import 'package:mos_app/screens/menu/customize_drink_screen.dart';
 import 'package:mos_app/widgets/common/selectable_pill.dart';
@@ -9,8 +10,12 @@ import 'package:mos_app/widgets/menu/option_group_section.dart';
 import '../../helpers.dart';
 
 void main() {
-  Future<dynamic> openDrink(WidgetTester tester, String name) async {
-    final container = await pumpMosApp(tester);
+  Future<dynamic> openDrink(
+    WidgetTester tester,
+    String name, {
+    MenuRepository? menu,
+  }) async {
+    final container = await pumpMosApp(tester, menu: menu);
     await continueAsGuest(tester);
     await tester.tap(find.widgetWithText(NavigationDestination, 'Menu'));
     await tester.pumpAndSettle();
@@ -173,8 +178,10 @@ void main() {
 
   testWidgets('TC-15: Americano shows its own Large price', (tester) async {
     await openDrink(tester, 'Americano');
-    expect(pill(r'Large +$0.50'), findsOneWidget);
-    await tapPill(tester, r'Large +$0.50');
+    // Medium by default, like every drink; Large is $0.25 more here.
+    expect(isSelected(tester, r'Medium +$0.00'), isTrue);
+    expect(buttonText(tester), r'Add to cart · $2.75');
+    await tapPill(tester, r'Large +$0.25');
     expect(buttonText(tester), r'Add to cart · $3.00');
   });
 
@@ -228,7 +235,11 @@ void main() {
   });
 
   testWidgets('TC-12: without a size, the drink is not added', (tester) async {
-    final container = await openDrink(tester, 'Americano');
+    final container = await openDrink(
+      tester,
+      'Americano',
+      menu: NoDefaultSizeMenuRepository(),
+    );
     await tester.tap(addToCartButton());
     await tester.pumpAndSettle();
 

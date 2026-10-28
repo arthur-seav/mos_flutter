@@ -6,18 +6,45 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/app.dart';
 import 'package:mos_app/data/mock/mock_auth_repository.dart';
 import 'package:mos_app/data/mock/mock_menu_repository.dart';
+import 'package:mos_app/data/models/drink_option.dart';
+import 'package:mos_app/data/models/product_customization.dart';
+import 'package:mos_app/data/repositories/menu_repository.dart';
 import 'package:mos_app/data/repository_providers.dart';
 
 /// A mock backend as a provider override. Instant by default; pass a
-/// [latency] to see loading states.
-List<Override> mockOverrides({Duration latency = Duration.zero}) => [
+/// [latency] to see loading states, or your own [menu].
+List<Override> mockOverrides({
+  Duration latency = Duration.zero,
+  MenuRepository? menu,
+}) => [
   authRepositoryProvider.overrideWithValue(
     MockAuthRepository(latency: latency),
   ),
   menuRepositoryProvider.overrideWithValue(
-    MockMenuRepository(latency: latency),
+    menu ?? MockMenuRepository(latency: latency),
   ),
 ];
+
+/// The demo menu, but no drink has a default size: the admin left
+/// `default_option_id` empty (it is nullable). For TC-12, which the demo
+/// menu cannot show because every drink has its defaults.
+class NoDefaultSizeMenuRepository extends MockMenuRepository {
+  NoDefaultSizeMenuRepository() : super(latency: Duration.zero);
+
+  @override
+  Future<ProductCustomization> fetchCustomization(int productId) async {
+    final c = await super.fetchCustomization(productId);
+    return ProductCustomization(
+      product: c.product,
+      groups: [
+        for (final g in c.groups)
+          g.group.name == 'Size'
+              ? ProductOptionGroup(group: g.group, options: g.options)
+              : g,
+      ],
+    );
+  }
+}
 
 /// Starts the whole app with the mock backend, on a 412 x 917 screen
 /// (the Figma frame size) instead of the default 800 x 600 test window.
@@ -26,13 +53,14 @@ List<Override> mockOverrides({Duration latency = Duration.zero}) => [
 Future<ProviderContainer> pumpMosApp(
   WidgetTester tester, {
   Duration latency = Duration.zero,
+  MenuRepository? menu,
 }) async {
   tester.view.physicalSize = const Size(412, 917);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
 
   final container = ProviderContainer.test(
-    overrides: mockOverrides(latency: latency),
+    overrides: mockOverrides(latency: latency, menu: menu),
   );
   await tester.pumpWidget(
     UncontrolledProviderScope(container: container, child: const MosApp()),

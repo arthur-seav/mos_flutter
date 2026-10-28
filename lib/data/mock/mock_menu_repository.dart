@@ -12,8 +12,10 @@ import '../repositories/menu_repository.dart';
 /// [markSoldOut] stands in for staff marking a drink sold out (FR-22),
 /// for TC-17.
 /// Drink options follow the test cases: Espresso is hot only (TC-10),
-/// Caramel Latte has the Figma defaults (TC-11), Americano has no default
-/// size (TC-12) and its own Large price (TC-15), Latte is $3.00 with
+/// Caramel Latte has the Figma defaults (TC-11), every drink has a
+/// default in each required group (TC-12 is tested with a repository
+/// that drops one), Americano has its own Large price (TC-15), Latte is
+/// $3.00 with
 /// Large +$1.00 (TC-14).
 class MockMenuRepository implements MenuRepository {
   MockMenuRepository({this.latency = const Duration(milliseconds: 600)});
@@ -317,11 +319,11 @@ class MockMenuRepository implements MenuRepository {
           _offer(_sweetness, defaultId: noSugar),
           _offer(_addOns),
         ],
-        // TC-12: no default size. TC-15: Large is +$0.50 for Americano.
+        // TC-15: Large is +$0.50 for Americano (not the Latte's +$1.00).
+        // Medium +$0.25 so the sizes still step up from the default.
         2 => _hotOrIced(
-          size: null,
           sweetness: noSugar,
-          sizePrices: {large: 0.5},
+          sizePrices: {medium: 0.25, large: 0.5},
         ),
         // TC-11: the Figma defaults.
         4 => _hotOrIced(temperature: iced, ice: lessIce),
