@@ -143,4 +143,48 @@ void main() {
     expect(find.byType(CartScreen), findsOneWidget);
     expect(find.text('Your cart'), findsOneWidget);
   });
+
+  testWidgets('FR-10: the last drink can scroll clear of the cart bar', (
+    tester,
+  ) async {
+    final container = await pumpMosApp(tester);
+    await continueAsGuest(tester);
+    container
+        .read(cartControllerProvider.notifier)
+        .add(
+          CartItem(
+            product: Product(
+              id: 18,
+              categoryId: 1,
+              name: 'Latte',
+              basePrice: Money.dollars(3),
+            ),
+            options: const [],
+            quantity: 1,
+          ),
+        );
+    await tester.tap(find.widgetWithText(NavigationDestination, 'Menu'));
+    await tester.pumpAndSettle();
+
+    final list = find.descendant(
+      of: find.byType(RefreshIndicator),
+      matching: find.byType(Scrollable),
+    );
+    // All the way down. ListView only measures the items it has built,
+    // so the end moves while scrolling; repeat until it stops moving.
+    final position = tester.state<ScrollableState>(list.first).position;
+    for (var i = 0; i < 10 && position.pixels < position.maxScrollExtent; i++) {
+      position.jumpTo(position.maxScrollExtent);
+      await tester.pumpAndSettle();
+    }
+    expect(position.pixels, position.maxScrollExtent);
+
+    // The last drink on the menu ends above the bar, not under it.
+    final last = find.widgetWithText(ProductTile, 'Lemon Soda');
+    expect(last, findsOneWidget);
+    expect(
+      tester.getBottomLeft(last).dy,
+      lessThanOrEqualTo(tester.getTopLeft(find.byType(CartBar)).dy),
+    );
+  });
 }

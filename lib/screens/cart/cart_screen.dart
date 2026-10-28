@@ -8,6 +8,7 @@ import '../../data/models/cart_item.dart';
 import '../../data/models/money.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/cart/add_more_button.dart';
 import '../../widgets/cart/cart_line_card.dart';
 import '../../widgets/common/square_icon_button.dart';
 
@@ -157,19 +158,7 @@ class _CartList extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
           ],
-          OutlinedButton.icon(
-            onPressed: () => context.go(AppRoutes.menu),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.caramel,
-              side: const BorderSide(color: AppColors.caramel),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            icon: const Icon(Icons.add),
-            label: const Text('Add more items'),
-          ),
+          AddMoreButton(onPressed: () => context.go(AppRoutes.menu)),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),

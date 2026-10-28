@@ -28,6 +28,7 @@ To preview in a browser: `flutter run -d chrome`.
 |---|---|
 | `flutter_riverpod` 3.3.x | State management. 3.3.x is the newest line that supports Dart 3.11. |
 | `go_router` 17.x | Routing, bottom tabs, redirect to login when there is no session. |
+| `dotted_border` | The dashed "Add more items" outline in the cart (Flutter has no dashed border). |
 | `email_validator` | Email format check. |
 | `intl` | Price formatting (`$3.50`). |
 | `phone_numbers_parser` | Phone number check (Dart port of Google's libphonenumber). |
