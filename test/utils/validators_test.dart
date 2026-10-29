@@ -85,4 +85,36 @@ void main() {
     expect(validateRequiredPassword(''), 'Enter your password.');
     expect(validateRequiredPassword('x'), isNull);
   });
+
+  group('validateDifferentPassword (FR-30)', () {
+    test('the current password cannot be reused', () {
+      expect(
+        validateDifferentPassword('password123', current: 'password123'),
+        'Choose a password different from your current one.',
+      );
+    });
+
+    test('another password is fine', () {
+      expect(
+        validateDifferentPassword('password124', current: 'password123'),
+        isNull,
+      );
+    });
+
+    test('the comparison is exact, so case and spaces count', () {
+      expect(
+        validateDifferentPassword('Password123', current: 'password123'),
+        isNull,
+      );
+      expect(
+        validateDifferentPassword('password123 ', current: 'password123'),
+        isNull,
+      );
+    });
+
+    test('empty input is left to the length check', () {
+      expect(validateDifferentPassword('', current: 'password123'), isNull);
+      expect(validateDifferentPassword(null, current: ''), isNull);
+    });
+  });
 }
