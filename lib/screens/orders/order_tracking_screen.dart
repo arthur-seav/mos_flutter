@@ -12,6 +12,7 @@ import '../../theme/app_text_styles.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/square_icon_button.dart';
 import '../../widgets/common/top_toast.dart';
+import '../../widgets/orders/demo_staff_button.dart';
 import '../../widgets/orders/tracking/cancel_order_sheet.dart';
 import '../../widgets/orders/tracking/order_summary_row.dart';
 import '../../widgets/orders/tracking/pickup_code_card.dart';
@@ -141,6 +142,8 @@ class _TrackingBody extends StatelessWidget {
                 ProgressTimeline(steps: progress.steps),
                 const SizedBox(height: 16),
                 OrderSummaryRow(order: order, summary: progress.summary),
+                // Mock backend only: lets a demo play the staff's part.
+                DemoStaffButton(order: order),
               ],
             ),
           ),
@@ -186,13 +189,10 @@ class _BottomActions extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final List<Widget> children;
     if (order.canCancel) {
-      final method = order.paidPayment?.method ?? PaymentMethod.khqr;
-      final where = method == PaymentMethod.card
-          ? 'your card'
-          : 'your ${method.label} account';
+      final where = refundDestination(order.paidPayment?.method);
       children = [
         Text(
-          'You can cancel until the store confirms. Refunds go back to '
+          'You can cancel until the store confirms. Refunds go back '
           '$where.',
           style: AppTextStyles.caption,
           textAlign: TextAlign.center,
