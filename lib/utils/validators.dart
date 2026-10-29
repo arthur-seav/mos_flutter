@@ -109,6 +109,19 @@ String? validatePasswordConfirmation(
   return null;
 }
 
+/// Change Password (FR-30): reusing the current password is not a change,
+/// so the new one has to be something else.
+String? validateDifferentPassword(
+  String? newPassword, {
+  required String current,
+}) {
+  if (newPassword == null || newPassword.isEmpty) return null;
+  if (newPassword == current) {
+    return 'Choose a password different from your current one.';
+  }
+  return null;
+}
+
 String? validatePhone(String? value) {
   final text = value?.trim() ?? '';
   if (text.isEmpty) return 'Enter your phone number.';
