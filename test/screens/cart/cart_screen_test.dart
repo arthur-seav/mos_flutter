@@ -2,18 +2,21 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mos_app/controllers/auth/auth_controller.dart';
 import 'package:mos_app/controllers/cart/cart_controller.dart';
 import 'package:mos_app/data/mock/mock_menu_repository.dart';
 import 'package:mos_app/data/models/drink_selection.dart';
 import 'package:mos_app/data/models/product_customization.dart';
 import 'package:mos_app/data/repository_providers.dart';
 import 'package:mos_app/router.dart';
+import 'package:mos_app/screens/auth/login_screen.dart';
 import 'package:mos_app/screens/cart/cart_screen.dart';
 import 'package:mos_app/screens/checkout/checkout_screen.dart';
 import 'package:mos_app/screens/menu/customize_drink_screen.dart';
 import 'package:mos_app/screens/menu/menu_screen.dart';
 import 'package:mos_app/widgets/cart/add_more_button.dart';
 import 'package:mos_app/widgets/cart/cart_line_card.dart';
+import 'package:mos_app/widgets/auth/auth_status_view.dart';
 import 'package:mos_app/widgets/common/selectable_pill.dart';
 
 import '../../helpers.dart';
@@ -41,13 +44,19 @@ Future<void> addDrink(
       .add(DrinkSelection.initial(customization).toCartItem());
 }
 
-/// Starts the app as a guest with [drinks] in the cart and opens the cart.
+/// Starts the app as a guest (or signed in as Dara) with [drinks] in the
+/// cart and opens the cart.
 Future<ProviderContainer> openCart(
   WidgetTester tester, [
   List<int> drinks = const [],
+  bool signedIn = false,
 ]) async {
   final container = await pumpMosApp(tester);
-  await continueAsGuest(tester);
+  if (signedIn) {
+    await signInAsDara(tester);
+  } else {
+    await continueAsGuest(tester);
+  }
   for (final id in drinks) {
     await addDrink(tester, container, id);
   }
@@ -205,7 +214,7 @@ void main() {
   testWidgets('TC-17: a drink that sold out is taken out at checkout', (
     tester,
   ) async {
-    final container = await openCart(tester, [latte, espresso]);
+    final container = await openCart(tester, [latte, espresso], true);
     (container.read(menuRepositoryProvider) as MockMenuRepository).markSoldOut(
       espresso,
     );
@@ -222,14 +231,102 @@ void main() {
     expect(totalText(tester), r'$3.50');
   });
 
-  testWidgets('nothing sold out: "Go to checkout" opens checkout', (
-    tester,
-  ) async {
-    final container = await openCart(tester, [latte]);
+  testWidgets('signed in, nothing sold out: "Go to checkout" opens checkout '
+      'with no login step', (tester) async {
+    final container = await openCart(tester, [latte], true);
     await tester.tap(find.text('Go to checkout'));
     await tester.pumpAndSettle();
 
+    expect(find.text('Log in to order'), findsNothing);
     expect(find.byType(CheckoutScreen), findsOneWidget);
     expect(container.read(cartControllerProvider), hasLength(1));
+  });
+
+  group('BR-06 / TC-18: a guest logs in at "Go to checkout"', () {
+    testWidgets('log in -> checkout with the cart kept; Back -> the cart', (
+      tester,
+    ) async {
+      final container = await openCart(tester, [latte, espresso]);
+      await tester.tap(find.text('Go to checkout'));
+      await tester.pumpAndSettle();
+      expect(find.text('Log in to order'), findsOneWidget);
+      expect(find.byType(CheckoutScreen), findsNothing);
+
+      await tester.tap(find.text('Log in'));
+      await tester.pumpAndSettle();
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.text('Continue as guest'), findsNothing);
+      expect(find.byTooltip('Back'), findsOneWidget);
+
+      await signInAsDara(tester);
+      expect(find.byType(CheckoutScreen), findsOneWidget);
+      expect(
+        container.read(cartControllerProvider).map((l) => l.product.name),
+        ['Latte', 'Espresso'],
+      );
+
+      // The login page is gone from the history: Back is the cart.
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(find.byType(CartScreen), findsOneWidget);
+      expect(find.byType(LoginScreen), findsNothing);
+    });
+
+    testWidgets('creating an account instead also goes on to checkout', (
+      tester,
+    ) async {
+      final container = await openCart(tester, [latte]);
+      await tester.tap(find.text('Go to checkout'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Log in'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Create an account'));
+      await tester.pumpAndSettle();
+
+      final f = find.byType(TextFormField);
+      await tester.enterText(f.at(0), 'Sophat Samnang');
+      await tester.enterText(f.at(1), 'new@example.com');
+      await tester.enterText(f.at(2), '017 222 333');
+      await tester.enterText(f.at(3), 'longenough');
+      await tester.tap(find.widgetWithText(FilledButton, 'Create account'));
+      await tester.pump(const Duration(milliseconds: 10));
+      await tester.pump();
+      expect(find.text('Account created successfully.'), findsOneWidget);
+      await tester.pump(authStatusDisplayTime);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CheckoutScreen), findsOneWidget);
+      final session = container.read(authControllerProvider);
+      expect(session.isCustomer, isTrue);
+      expect(session.user?.fullName, 'Sophat Samnang');
+      expect(container.read(cartControllerProvider), hasLength(1));
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(find.byType(CartScreen), findsOneWidget);
+    });
+
+    testWidgets('"Not now" stays on the cart', (tester) async {
+      await openCart(tester, [latte]);
+      await tester.tap(find.text('Go to checkout'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Not now'));
+      await tester.pumpAndSettle();
+      expect(find.byType(CartScreen), findsOneWidget);
+      expect(find.byType(LoginScreen), findsNothing);
+      expect(find.byType(CheckoutScreen), findsNothing);
+    });
+
+    testWidgets('Back on the login page returns to the cart', (tester) async {
+      final container = await openCart(tester, [latte]);
+      await tester.tap(find.text('Go to checkout'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Log in'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(find.byType(CartScreen), findsOneWidget);
+      expect(find.byType(CheckoutScreen), findsNothing);
+      expect(container.read(cartControllerProvider), hasLength(1));
+    });
   });
 }

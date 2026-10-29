@@ -24,9 +24,11 @@ import '../../widgets/auth/brand_header.dart';
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key, this.returnTo});
 
-  /// Where to go after signing in, for a guest sent here before ordering
-  /// (BR-06, TC-18). The router's redirect does not run for a pushed
-  /// page, so this page navigates itself.
+  /// For a guest sent here before ordering (BR-06, TC-18). After signing
+  /// in, a pushed page pops with `true` so the caller (the cart) carries
+  /// on; opened directly (a link to /checkout), it goes to [returnTo].
+  /// The router's redirect does not run for a pushed page, so this page
+  /// navigates itself.
   final String? returnTo;
 
   @override
@@ -57,12 +59,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             password: _passwordController.text,
           ),
     );
+    _leaveAfterSignIn();
+  }
+
+  /// See [LoginScreen.returnTo].
+  void _leaveAfterSignIn() {
     final returnTo = widget.returnTo;
-    if (returnTo != null &&
-        mounted &&
-        ref.read(authControllerProvider).isCustomer) {
-      context.go(returnTo);
+    if (returnTo == null ||
+        !mounted ||
+        !ref.read(authControllerProvider).isCustomer) {
+      return;
     }
+    context.canPop() ? context.pop(true) : context.go(returnTo);
+  }
+
+  /// A guest who creates an account here carries on like one who signs in.
+  Future<void> _openSignUp() async {
+    final created = await context.push<bool>(AppRoutes.signUp);
+    if (created == true) _leaveAfterSignIn();
   }
 
   @override
@@ -178,9 +192,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     child: AuthFooterLink(
                       prompt: 'New here?',
                       action: 'Create an account',
-                      onTap: isSubmitting
-                          ? null
-                          : () => context.push(AppRoutes.signUp),
+                      onTap: isSubmitting ? null : _openSignUp,
                     ),
                   ),
                 ),

@@ -117,7 +117,7 @@ Drink options follow the test cases: Espresso is hot only (TC-10), Caramel Latte
 Espresso has **Shots** instead of a cup size (BR-01): Single -$0.50, Double (default), Triple +$0.50; "Extra shot" stays in the add-ons for a 4th shot.
 Size and shot buttons show the price against the current choice ("Small -$0.50 · Medium +$0.00 · Large +$0.50"); the data keeps each option's own extra price (BR-03).
 
-The cart stays in the app until checkout (SA §3.5). Before checkout the app asks which drinks sold out and removes them (BR-05). `MockMenuRepository.markSoldOut(id)` stands in for staff marking a drink sold out, for TC-17 in the tests. "Go to checkout" stops at a message until the checkout step is built.
+The cart stays in the app until checkout (SA §3.5). Before checkout the app asks which drinks sold out and removes them (BR-05). `MockMenuRepository.markSoldOut(id)` stands in for staff marking a drink sold out, for TC-17 in the tests.
 
 **Checkout and payment (mock).** The demo store is open 7:00 AM – 9:00 PM every day, and the schedule panel offers the next 6 pickup times: the first at least 5 minutes ahead, rounded up to a 5-minute mark, then every 10 minutes, none after 8:00 PM (BR-07, TC-19). At 10:41 that is 10:50, 11:00 … 11:40. Payments work like a gateway's test mode:
 
@@ -127,7 +127,7 @@ The cart stays in the app until checkout (SA §3.5). Before checkout the app ask
 | Card ending 4242 (saved for Dara) | Paid. |
 | Card `4000 0000 0000 0002` (add it on the card page) | Declined, to show TC-22. |
 
-The mock backend works out every price from the menu and ignores any amount the app could send (TC-23). Guests are asked to log in before paying (BR-06).
+The mock backend works out every price from the menu and ignores any amount the app could send (TC-23). Guests are asked to log in when they tap "Go to checkout" in the cart (BR-06, TC-18); signing in or creating an account there takes them on to checkout with the cart kept, and a link straight to checkout or a payment page sends a guest to login first.
 
 **Save QR to photos** (KHQR page) saves a picture, not just the code: the logo, order number, amount, QR code, when it expires, when the order was made, the pickup time and the drinks with their prices. Dates are written in full ("Thu, 29 Oct 2026"), and the file is named `MOS-KHQR-order<id>-<yyyyMMdd-HHmm>`, so an old picture can be told apart. The button only shows on Android / iOS (not on web). After pulling, run `flutter pub get` and restart the app fully: hot reload does not load the new native plugin.
 

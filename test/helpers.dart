@@ -1,9 +1,11 @@
 import 'dart:ui';
 
+import 'package:flutter/material.dart' show TextFormField;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/app.dart';
+import 'package:mos_app/data/mock/mock_auth_repository.dart';
 import 'package:mos_app/data/mock/mock_backend.dart';
 import 'package:mos_app/data/mock/mock_menu_repository.dart';
 import 'package:mos_app/data/models/drink_option.dart';
@@ -86,5 +88,16 @@ Future<ProviderContainer> pumpMosApp(
 /// Taps "Continue as guest" on the login page and waits for Home.
 Future<void> continueAsGuest(WidgetTester tester) async {
   await tester.tap(find.text('Continue as guest'));
+  await tester.pumpAndSettle();
+}
+
+/// Fills in and submits the login page as the demo customer Dara.
+Future<void> signInAsDara(WidgetTester tester) async {
+  await tester.enterText(find.byType(TextFormField).at(0), 'dara@example.com');
+  await tester.enterText(
+    find.byType(TextFormField).at(1),
+    MockAuthRepository.demoPassword,
+  );
+  await tester.tap(find.text('Sign in'));
   await tester.pumpAndSettle();
 }

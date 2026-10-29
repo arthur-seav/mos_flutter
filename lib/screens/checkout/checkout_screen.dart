@@ -20,8 +20,9 @@ import '../../widgets/common/square_icon_button.dart';
 ///
 /// Pickup time: as soon as possible or a slot today (FR-11, BR-07);
 /// payment: KHQR or card (FR-13); a note; the order summary (FR-12); and
-/// "Pay", which creates the order and opens the payment page. A guest is
-/// asked to log in first (BR-06, TC-18); while online ordering is paused
+/// "Pay", which creates the order and opens the payment page. Only
+/// signed-in customers get here (BR-06, TC-18: guests log in at the
+/// cart; the router sends them to login); while online ordering is paused
 /// the page says so and Pay is blocked (FR-41, TC-20).
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -65,38 +66,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               : AppRoutes.khqr(order.id),
         );
       case CheckoutBlocked(needsLogin: true):
-        await _askToLogIn();
+        // Guests log in at the cart, and the router keeps them out of
+        // this page; this is the last line (BR-06).
+        context.go(AppRoutes.loginThenReturnTo(AppRoutes.checkout));
       case CheckoutBlocked(:final message):
         _showMessage(message);
         if (ref.read(cartControllerProvider).isEmpty) _back();
-    }
-  }
-
-  /// TC-18: the cart is kept; after logging in the customer comes back
-  /// here.
-  Future<void> _askToLogIn() async {
-    final logIn = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Log in to order'),
-        content: const Text(
-          'Guests can browse, but you need an account to place an order. '
-          'Your cart will be kept.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Not now'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Log in'),
-          ),
-        ],
-      ),
-    );
-    if (logIn == true && mounted) {
-      context.push(AppRoutes.loginThenReturnTo(AppRoutes.checkout));
     }
   }
 

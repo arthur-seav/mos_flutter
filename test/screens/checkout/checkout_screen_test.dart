@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/controllers/cart/cart_controller.dart';
-import 'package:mos_app/data/mock/mock_auth_repository.dart';
 import 'package:mos_app/data/mock/mock_backend.dart';
 import 'package:mos_app/data/models/drink_selection.dart';
 import 'package:mos_app/data/models/product_customization.dart';
@@ -19,16 +18,6 @@ import '../../helpers.dart';
 // Latte (Medium) $3.50 + Espresso (Double) $2.00 = $5.50.
 const latte = 18, espresso = 1;
 
-Future<void> signInAsDara(WidgetTester tester) async {
-  await tester.enterText(find.byType(TextFormField).at(0), 'dara@example.com');
-  await tester.enterText(
-    find.byType(TextFormField).at(1),
-    MockAuthRepository.demoPassword,
-  );
-  await tester.tap(find.text('Sign in'));
-  await tester.pumpAndSettle();
-}
-
 Future<void> addDrink(
   WidgetTester tester,
   ProviderContainer container,
@@ -44,19 +33,13 @@ Future<void> addDrink(
       .add(DrinkSelection.initial(c).toCartItem());
 }
 
-/// Opens checkout with Latte + Espresso in the cart, signed in as Dara
-/// (or as a guest).
+/// Opens checkout with Latte + Espresso in the cart, signed in as Dara.
 Future<ProviderContainer> openCheckout(
   WidgetTester tester,
-  MockBackend backend, {
-  bool guest = false,
-}) async {
+  MockBackend backend,
+) async {
   final container = await pumpMosApp(tester, backend: backend);
-  if (guest) {
-    await continueAsGuest(tester);
-  } else {
-    await signInAsDara(tester);
-  }
+  await signInAsDara(tester);
   await addDrink(tester, container, backend, latte);
   await addDrink(tester, container, backend, espresso);
   container.read(routerProvider).push(AppRoutes.checkout);
@@ -163,35 +146,26 @@ void main() {
     expect(payButton(tester).onPressed, isNull);
   });
 
-  testWidgets('TC-18: a guest is asked to log in and comes back to checkout '
-      'with the cart kept', (tester) async {
-    final container = await openCheckout(tester, testBackend(), guest: true);
-    await tester.tap(find.text(r'Pay $5.50'));
+  testWidgets('BR-06: a guest opening checkout by a link logs in first, '
+      'then lands on checkout', (tester) async {
+    final container = await pumpMosApp(tester);
+    await continueAsGuest(tester);
+    container.read(routerProvider).go(AppRoutes.checkout);
     await tester.pumpAndSettle();
-    expect(find.text('Log in to order'), findsOneWidget);
-
-    await tester.tap(find.text('Log in'));
-    await tester.pumpAndSettle();
+    expect(find.byType(CheckoutScreen), findsNothing);
     expect(find.byType(LoginScreen), findsOneWidget);
-    expect(find.text('Continue as guest'), findsNothing);
-    expect(find.byTooltip('Back'), findsOneWidget);
 
     await signInAsDara(tester);
     expect(find.byType(CheckoutScreen), findsOneWidget);
-    expect(container.read(cartControllerProvider).map((l) => l.product.name), [
-      'Latte',
-      'Espresso',
-    ]);
   });
 
-  testWidgets('a guest can say "Not now" and stay on checkout', (tester) async {
-    await openCheckout(tester, testBackend(), guest: true);
-    await tester.tap(find.text(r'Pay $5.50'));
+  testWidgets('BR-06: payment pages are closed to guests too', (tester) async {
+    final container = await pumpMosApp(tester);
+    await continueAsGuest(tester);
+    container.read(routerProvider).go(AppRoutes.khqr(1));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Not now'));
-    await tester.pumpAndSettle();
-    expect(find.byType(CheckoutScreen), findsOneWidget);
-    expect(find.byType(LoginScreen), findsNothing);
+    expect(find.byType(KhqrPaymentScreen), findsNothing);
+    expect(find.byType(LoginScreen), findsOneWidget);
   });
 
   testWidgets('Pay with KHQR opens the KHQR page', (tester) async {

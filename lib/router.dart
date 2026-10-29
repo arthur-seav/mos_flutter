@@ -34,21 +34,33 @@ export 'app_routes.dart';
 /// Screens therefore never navigate after signing in themselves.
 final routerProvider = Provider<GoRouter>((ref) {
   // go_router wants a Listenable to know when to re-check `redirect`.
-  // This one changes whenever the session does.
-  final session = ValueNotifier<AuthState>(ref.read(authControllerProvider));
-  ref.listen(authControllerProvider, (_, next) => session.value = next);
+  // It fires only when there starts or stops being a session (sign in,
+  // sign out), not when a guest signs in: that guest is on a pushed
+  // login page, which goes back by itself, and a re-check at that moment
+  // rebuilds the page stack from before the pop and puts login back.
+  var auth = ref.read(authControllerProvider);
+  final session = ValueNotifier<bool>(auth.hasSession);
+  ref.listen(authControllerProvider, (_, next) {
+    auth = next;
+    session.value = next.hasSession;
+  });
 
   final router = GoRouter(
     initialLocation: AppRoutes.login,
     refreshListenable: session,
     redirect: (context, state) {
       final onAuthPage = AppRoutes.authPages.contains(state.matchedLocation);
-      if (!session.value.hasSession) {
+      if (!auth.hasSession) {
         return onAuthPage ? null : AppRoutes.login;
+      }
+      // BR-06 / TC-18: guests never reach checkout or payment, e.g. by a
+      // link; they log in first and come back to checkout.
+      if (auth.isGuest && AppRoutes.isOrdering(state.matchedLocation)) {
+        return AppRoutes.loginThenReturnTo(AppRoutes.checkout);
       }
       if (!onAuthPage) return null;
       final from = state.uri.queryParameters['from'];
-      if (session.value.isGuest) {
+      if (auth.isGuest) {
         // A guest stays on login only when sent there to sign in before
         // ordering (BR-06, TC-18: login?from=/checkout). "Continue as
         // guest" on the plain login page goes Home.

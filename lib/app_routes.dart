@@ -36,6 +36,10 @@ abstract final class AppRoutes {
   static String loginThenReturnTo(String path) =>
       '$login?from=${Uri.encodeQueryComponent(path)}';
 
+  /// Checkout and payment pages: signed-in customers only (BR-06).
+  static bool isOrdering(String location) =>
+      location == checkout || location.startsWith('/pay/');
+
   /// Pages for people who are not signed in. Everything else needs a
   /// session (customer or guest).
   static const authPages = {login, signUp, forgotPassword, resetPassword};

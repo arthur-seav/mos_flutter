@@ -85,7 +85,7 @@ Future<ProviderContainer> openResult(
   PaymentOutcome outcome,
 ) async {
   final container = await pumpMosApp(tester);
-  await continueAsGuest(tester);
+  await signInAsDara(tester);
   container.read(routerProvider).push(AppRoutes.paymentResult, extra: outcome);
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 300));
@@ -179,7 +179,7 @@ void main() {
       tester,
     ) async {
       final container = await pumpMosApp(tester);
-      await continueAsGuest(tester);
+      await signInAsDara(tester);
       final router = container.read(routerProvider);
       router.push(AppRoutes.checkout);
       await tester.pumpAndSettle();

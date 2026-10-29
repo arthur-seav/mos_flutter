@@ -44,7 +44,7 @@ void main() {
   testWidgets('shows the saved card, never the full number', (tester) async {
     final backend = testBackend();
     final container = await pumpMosApp(tester, backend: backend);
-    await continueAsGuest(tester);
+    await signInAsDara(tester);
     await openCardPayment(tester, backend, container);
 
     // Once on the card picture, once in the summary below it.
@@ -61,7 +61,7 @@ void main() {
   ) async {
     final backend = testBackend();
     final container = await pumpMosApp(tester, backend: backend);
-    await continueAsGuest(tester);
+    await signInAsDara(tester);
     await openCardPayment(tester, backend, container);
 
     await tester.tap(find.byTooltip('Pay'));
@@ -90,7 +90,7 @@ void main() {
   ) async {
     final backend = testBackend();
     final container = await pumpMosApp(tester, backend: backend);
-    await continueAsGuest(tester);
+    await signInAsDara(tester);
     await openCardPayment(tester, backend, container);
 
     await openAddCardForm(tester);
@@ -143,7 +143,7 @@ void main() {
   testWidgets('the CVV field is obscured', (tester) async {
     final backend = testBackend();
     final container = await pumpMosApp(tester, backend: backend);
-    await continueAsGuest(tester);
+    await signInAsDara(tester);
     await openCardPayment(tester, backend, container);
 
     await openAddCardForm(tester);
@@ -158,7 +158,7 @@ void main() {
     Future<void> pumpForm(WidgetTester tester) async {
       final backend = testBackend();
       final container = await pumpMosApp(tester, backend: backend);
-      await continueAsGuest(tester);
+      await signInAsDara(tester);
       await openCardPayment(tester, backend, container);
       await openAddCardForm(tester);
     }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/controllers/cart/cart_controller.dart';
-import 'package:mos_app/data/mock/mock_auth_repository.dart';
 import 'package:mos_app/data/models/order.dart';
 import 'package:mos_app/screens/checkout/card_payment_screen.dart';
 import 'package:mos_app/screens/checkout/checkout_screen.dart';
@@ -19,19 +18,6 @@ void main() {
     for (var i = 0; i < n; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
-  }
-
-  Future<void> signIn(WidgetTester tester) async {
-    await tester.enterText(
-      find.byType(TextFormField).at(0),
-      'dara@example.com',
-    );
-    await tester.enterText(
-      find.byType(TextFormField).at(1),
-      MockAuthRepository.demoPassword,
-    );
-    await tester.tap(find.text('Sign in'));
-    await tester.pumpAndSettle();
   }
 
   /// Home -> Caramel Latte (defaults, $4.00) -> Add to cart -> cart ->
@@ -57,7 +43,7 @@ void main() {
       var now = testNow();
       final backend = testBackend(clock: () => now);
       final container = await pumpMosApp(tester, backend: backend);
-      await signIn(tester);
+      await signInAsDara(tester);
       await orderCaramelLatte(tester);
 
       await tester.tap(find.text(r'Pay $4.00'));
@@ -88,7 +74,7 @@ void main() {
     var now = testNow();
     final backend = testBackend(clock: () => now);
     await pumpMosApp(tester, backend: backend);
-    await signIn(tester);
+    await signInAsDara(tester);
     await orderCaramelLatte(tester);
 
     // Card, and add the gateway's "declined" test card.

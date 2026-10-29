@@ -51,7 +51,7 @@ void main() {
     var now = testNow();
     final b = testBackend(clock: () => now);
     final c = await pumpMosApp(tester, backend: b);
-    await continueAsGuest(tester);
+    await signInAsDara(tester);
 
     late Order order;
     await tester.runAsync(() async {
@@ -79,7 +79,7 @@ void main() {
     var now = testNow();
     final b = testBackend(clock: () => now);
     final c = await pumpMosApp(tester, backend: b);
-    await continueAsGuest(tester);
+    await signInAsDara(tester);
 
     late Order order;
     await tester.runAsync(() async {
@@ -115,7 +115,7 @@ void main() {
     var now = testNow();
     final b = testBackend(clock: () => now, khqrPaysAfter: null);
     final c = await pumpMosApp(tester, backend: b);
-    await continueAsGuest(tester);
+    await signInAsDara(tester);
 
     late Order order;
     await tester.runAsync(() async {
@@ -147,7 +147,7 @@ void main() {
     var now = testNow();
     final b = testBackend(clock: () => now);
     final c = await pumpMosApp(tester, backend: b);
-    await continueAsGuest(tester);
+    await signInAsDara(tester);
 
     late Order order;
     await tester.runAsync(() async {
@@ -175,7 +175,7 @@ void main() {
       backend: b,
       extraOverrides: [qrSaverProvider.overrideWithValue(saver)],
     );
-    await continueAsGuest(tester);
+    await signInAsDara(tester);
     late Order order;
     await tester.runAsync(() async {
       order = await createOrder(b);
