@@ -6,6 +6,7 @@ import '../../controllers/auth/auth_controller.dart';
 import '../../controllers/common/submit_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../utils/clock.dart';
 import '../../utils/validators.dart';
 import '../../widgets/account/date_of_birth_field.dart';
 import '../../widgets/common/error_banner.dart';
@@ -61,10 +62,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
       c.text.trim().isEmpty ? null : c.text.trim();
 
   Future<void> _pickDateOfBirth() async {
-    final today = DateTime.now();
+    // Today comes from the app's clock, so nobody can be born tomorrow.
+    final today = ref.read(clockProvider)();
     final picked = await showDatePicker(
       context: context,
-      initialDate: _dateOfBirth,
+      initialDate: _dateOfBirth ?? today,
+      currentDate: today,
       firstDate: DateTime(1900),
       lastDate: today,
       helpText: 'Date of Birth',
@@ -140,7 +143,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                     children: [
                       LabeledTextField(
                         label: 'Full name',
-                        hintText: 'Dara Sok',
+                        hintText: 'Your name',
                         controller: _nameController,
                         icon: Icons.person_outline,
                         keyboardType: TextInputType.name,
@@ -152,7 +155,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                       const SizedBox(height: 16),
                       LabeledTextField(
                         label: 'Email',
-                        hintText: 'dara@example.com',
+                        hintText: 'you@example.com',
                         controller: _emailController,
                         icon: Icons.mail_outline,
                         keyboardType: TextInputType.emailAddress,
