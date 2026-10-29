@@ -114,7 +114,7 @@ Size and shot buttons show the price against the current choice ("Small -$0.50 �
 
 The cart stays in the app until checkout (SA §3.5). Before checkout the app asks which drinks sold out and removes them (BR-05). `MockMenuRepository.markSoldOut(id)` stands in for staff marking a drink sold out, for TC-17 in the tests. "Go to checkout" stops at a message until the checkout step is built.
 
-**Checkout and payment (mock).** The demo store is open 7:00 AM – 9:00 PM every day, with pickup slots every 15 minutes, at least 30 minutes ahead and no later than 8:00 PM (BR-07). Payments work like a gateway's test mode:
+**Checkout and payment (mock).** The demo store is open 7:00 AM – 9:00 PM every day, and the schedule panel offers the next 6 pickup times: the first at least 5 minutes ahead, rounded up to a 5-minute mark, then every 10 minutes, none after 8:00 PM (BR-07, TC-19). At 10:41 that is 10:50, 11:00 … 11:40. Payments work like a gateway's test mode:
 
 | Method | What happens |
 |---|---|
@@ -135,6 +135,10 @@ To try **Forgot password**, use `012 345 678` or `098 765 432`; any other number
 - **Card holder name.** Figma shows the holder's name on a saved card; `saved_cards` has no column for it. The app keeps `SavedCard.holderName`.
 - **Why a payment failed.** The failure screen says why ("Your card was declined.", "The QR code expired…"). `payments` has no column for it; the app reads `Payment.failureReason` from the gateway's reply.
 - **Options a drink does not offer (TC-10: Espresso is Hot only).** `product_options` is described as a price override only. The app also reads it as "the options this drink offers" when a drink has rows for a group.
+
+## Deviations from SA 2.0
+
+- **Pickup lead time (BR-07).** SA 2.0 says a scheduled slot must be at least 30 minutes after the order (`store_settings.min_prep_min`, default 30). The demo store uses **5 minutes**, with slots every 10 minutes (Arthur's decision, 2026-10-29). Only the mock data changed: the app reads both values from `store_settings`, so a store set to 30 / 15 behaves as SA 2.0 says (tested in `test/data/pickup_schedule_test.dart`). The schedule panel shows the next 6 times instead of the whole day; SA 2.0 does not fix a number. The SA document should be updated, or the store reset to 30.
 
 ## Fonts
 

@@ -11,7 +11,7 @@ import 'package:mos_app/data/models/product_customization.dart';
 import 'package:mos_app/data/repositories/menu_repository.dart';
 
 /// Thursday 29 October 2026, 10:12 AM: the store (7 AM - 9 PM) is open,
-/// so ASAP works and today's slots start at 10:45 (BR-07).
+/// so ASAP works and the first pickup slot is 10:20 (BR-07, 5 min lead).
 DateTime testNow() => DateTime(2026, 10, 29, 10, 12);
 
 /// The mock backend for tests: instant, at [testNow] unless [clock] is

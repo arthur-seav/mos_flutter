@@ -37,8 +37,7 @@ class ScheduleSheet extends StatefulWidget {
 }
 
 class _ScheduleSheetState extends State<ScheduleSheet> {
-  late DateTime? _picked =
-      widget.initial != null && widget.schedule.allows(widget.initial!)
+  late DateTime? _picked = widget.schedule.slots.contains(widget.initial)
       ? widget.initial
       : null;
 
@@ -66,7 +65,7 @@ class _ScheduleSheetState extends State<ScheduleSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            if (slots.every((s) => !s.isAvailable))
+            if (slots.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Text(
@@ -75,24 +74,22 @@ class _ScheduleSheetState extends State<ScheduleSheet> {
                 ),
               )
             else
-              ConstrainedBox(
-                // About four rows; the rest scrolls.
-                constraints: const BoxConstraints(maxHeight: 220),
-                child: GridView.count(
-                  shrinkWrap: true,
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 2.4,
-                  children: [
-                    for (final slot in slots)
-                      _SlotButton(
-                        slot: slot,
-                        selected: slot.time == _picked,
-                        onTap: () => setState(() => _picked = slot.time),
-                      ),
-                  ],
-                ),
+              // At most six times: two rows of three, no scrolling.
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 3,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 2.4,
+                children: [
+                  for (final time in slots)
+                    _SlotButton(
+                      time: time,
+                      selected: time == _picked,
+                      onTap: () => setState(() => _picked = time),
+                    ),
+                ],
               ),
             const SizedBox(height: 12),
             Row(
@@ -135,50 +132,36 @@ class _ScheduleSheetState extends State<ScheduleSheet> {
 
 class _SlotButton extends StatelessWidget {
   const _SlotButton({
-    required this.slot,
+    required this.time,
     required this.selected,
     required this.onTap,
   });
 
-  final PickupSlot slot;
+  final DateTime time;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final enabled = slot.isAvailable;
     return Semantics(
       button: true,
       selected: selected,
-      enabled: enabled,
       child: Material(
-        color: selected
-            ? AppColors.espresso
-            : enabled
-            ? AppColors.surface
-            : AppColors.muted.withValues(alpha: 0.5),
+        color: selected ? AppColors.espresso : AppColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
           side: BorderSide(
-            color: selected
-                ? AppColors.espresso
-                : enabled
-                ? AppColors.border
-                : Colors.transparent,
+            color: selected ? AppColors.espresso : AppColors.border,
           ),
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
-          onTap: enabled ? onTap : null,
+          onTap: onTap,
           child: Center(
             child: Text(
-              formatClock(slot.time),
+              formatClock(time),
               style: AppTextStyles.label.copyWith(
-                color: selected
-                    ? AppColors.onBrand
-                    : enabled
-                    ? AppColors.textPrimary
-                    : AppColors.textSecondary.withValues(alpha: 0.6),
+                color: selected ? AppColors.onBrand : AppColors.textPrimary,
               ),
             ),
           ),

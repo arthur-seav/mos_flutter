@@ -144,7 +144,7 @@ class CheckoutController extends AsyncNotifier<CheckoutState> {
     return PickupSchedule(store: s.store, now: now);
   }
 
-  /// "Confirm 10:45 AM". Returns false (and changes nothing) when the slot
+  /// "Confirm 10:40 AM". Returns false (and changes nothing) when the slot
   /// breaks BR-07, e.g. TC-19: after 8:00 PM when the store closes at 9.
   bool chooseSlot(DateTime time) {
     final s = _current;

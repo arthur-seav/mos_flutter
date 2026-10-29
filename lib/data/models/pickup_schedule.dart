@@ -2,22 +2,14 @@ import 'package:flutter/foundation.dart' show immutable;
 
 import 'store_info.dart';
 
-/// One time on the "Schedule pickup" panel.
-@immutable
-class PickupSlot {
-  const PickupSlot(this.time, {required this.isAvailable});
-
-  final DateTime time;
-
-  /// False = too soon (less than `min_prep_min` from now). Shown faded.
-  final bool isAvailable;
-}
-
 /// Today's pickup choices for a store at a given moment (FR-11, BR-07).
 ///
 /// BR-07: a scheduled slot must be at least `min_prep_min` after now,
 /// within opening hours, and no later than 60 minutes before closing.
 /// The backend checks the same rule when the order is placed.
+///
+/// Deviation from SA 2.0 (Arthur, 2026-10-29): the demo store uses a
+/// 5-minute lead time instead of 30 (README: Deviations).
 @immutable
 class PickupSchedule {
   const PickupSchedule({required this.store, required this.now});
@@ -69,20 +61,32 @@ class PickupSchedule {
         !time.isAfter(latest);
   }
 
-  /// The rest of today's slots, every `slot_interval_min` from opening
-  /// time: from the first one after now up to [latestSlot]. Those that are
-  /// too soon are included but not available (Figma: faded 10:30 AM).
-  List<PickupSlot> get slots {
+  /// At most this many times are offered.
+  static const slotCount = 6;
+
+  /// The next [slotCount] pickup times: the first at least `min_prep_min`
+  /// from now, rounded up to a 5-minute mark (10:41 + 5 -> 10:50), then
+  /// every `slot_interval_min` (11:00, 11:10, ...). None before opening
+  /// or after [latestSlot], so late in the day there may be fewer.
+  List<DateTime> get slots {
     final open = opensAt, latest = latestSlot;
     if (open == null || latest == null) return const [];
+    var t = _roundUpTo5(earliestSlot);
+    if (t.isBefore(open)) t = open;
     final step = Duration(minutes: store.settings.slotIntervalMin);
-    final result = <PickupSlot>[];
-    for (var t = open; !t.isAfter(latest); t = t.add(step)) {
-      if (t.isBefore(now)) continue;
-      result.add(PickupSlot(t, isAvailable: allows(t)));
+    final result = <DateTime>[];
+    while (result.length < slotCount && !t.isAfter(latest)) {
+      result.add(t);
+      t = t.add(step);
     }
     return result;
   }
 
-  bool get canSchedule => slots.any((s) => s.isAvailable);
+  static DateTime _roundUpTo5(DateTime t) {
+    var m = DateTime(t.year, t.month, t.day, t.hour, t.minute);
+    if (m.isBefore(t)) m = m.add(const Duration(minutes: 1)); // 10:46:30
+    return m.add(Duration(minutes: (5 - m.minute % 5) % 5));
+  }
+
+  bool get canSchedule => slots.isNotEmpty;
 }

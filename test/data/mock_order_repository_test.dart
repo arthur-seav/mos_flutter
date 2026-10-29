@@ -176,18 +176,19 @@ void main() {
 
   test('BR-07 is checked again by the backend', () async {
     await expectLater(
-      place(type: PickupType.scheduled, time: DateTime(2026, 10, 29, 10, 30)),
+      // 10:12 + 5 min lead = 10:17.
+      place(type: PickupType.scheduled, time: DateTime(2026, 10, 29, 10, 16)),
       throwsA(isA<OrderException>()),
     );
     await expectLater(
-      place(type: PickupType.scheduled, time: DateTime(2026, 10, 29, 20, 15)),
+      place(type: PickupType.scheduled, time: DateTime(2026, 10, 29, 20, 5)),
       throwsA(isA<OrderException>()),
     );
     final ok = await place(
       type: PickupType.scheduled,
-      time: DateTime(2026, 10, 29, 10, 45),
+      time: DateTime(2026, 10, 29, 10, 20),
     );
-    expect(ok.pickupTime, DateTime(2026, 10, 29, 10, 45));
+    expect(ok.pickupTime, DateTime(2026, 10, 29, 10, 20));
   });
 
   test('BR-05: a sold-out drink cannot be ordered', () async {

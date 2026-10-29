@@ -104,51 +104,53 @@ void main() {
     expect(payButton(tester).onPressed, isNotNull);
   });
 
-  testWidgets('TC-19 / BR-07: the schedule panel offers 10:45 AM to 8:00 PM', (
-    tester,
-  ) async {
-    await openCheckout(tester, testBackend());
+  testWidgets('the schedule panel offers the next six times', (tester) async {
+    await openCheckout(tester, testBackend()); // 10:12 AM
     await tester.tap(choice('Schedule for later'));
     await tester.pumpAndSettle();
 
     expect(find.text('Schedule pickup'), findsOneWidget);
     expect(find.text('Today · Store open until 9:00 PM'), findsOneWidget);
     expect(
-      find.text('Slots must be at least 30 minutes from now.'),
+      find.text('Slots must be at least 5 minutes from now.'),
       findsOneWidget,
     );
     expect(find.text('Choose a time'), findsOneWidget);
+    for (final t in [
+      '10:20 AM',
+      '10:30 AM',
+      '10:40 AM',
+      '10:50 AM',
+      '11:00 AM',
+      '11:10 AM',
+    ]) {
+      expect(find.text(t), findsOneWidget, reason: t);
+    }
+    expect(find.text('11:20 AM'), findsNothing);
 
-    // Too soon: listed but cannot be picked.
-    await tester.tap(find.text('10:30 AM'));
+    await tester.tap(find.text('10:40 AM'));
     await tester.pump();
-    expect(find.text('Confirm 10:30 AM'), findsNothing);
-
-    // TC-19: 8:00 PM is the last slot; 8:15 PM is not offered.
-    final grid = find.descendant(
-      of: find.byType(GridView),
-      matching: find.byType(Scrollable),
-    );
-    await tester.scrollUntilVisible(
-      find.text('8:00 PM'),
-      200,
-      scrollable: grid,
-    );
-    expect(find.text('8:15 PM'), findsNothing);
-
-    await tester.scrollUntilVisible(
-      find.text('10:45 AM'),
-      -200,
-      scrollable: grid,
-    );
-    await tester.tap(find.text('10:45 AM'));
-    await tester.pump();
-    await tester.tap(find.text('Confirm 10:45 AM'));
+    await tester.tap(find.text('Confirm 10:40 AM'));
     await tester.pumpAndSettle();
 
     expect(isChosen(tester, 'Schedule for later'), isTrue);
     expect(isChosen(tester, 'As soon as possible'), isFalse);
-    expect(find.text('Today at 10:45 AM · Change'), findsOneWidget);
+    expect(find.text('Today at 10:40 AM · Change'), findsOneWidget);
+  });
+
+  testWidgets('TC-19: near closing only the times up to 8:00 PM', (
+    tester,
+  ) async {
+    await openCheckout(
+      tester,
+      testBackend(clock: () => DateTime(2026, 10, 29, 19, 20)),
+    );
+    await tester.tap(choice('Schedule for later'));
+    await tester.pumpAndSettle();
+    for (final t in ['7:25 PM', '7:35 PM', '7:45 PM', '7:55 PM']) {
+      expect(find.text(t), findsOneWidget, reason: t);
+    }
+    expect(find.text('8:05 PM'), findsNothing);
   });
 
   testWidgets('TC-20: while ordering is paused the page says so; no Pay', (

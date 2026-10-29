@@ -126,24 +126,25 @@ void main() {
 
   test('TC-19 / BR-07: only allowed slots can be chosen', () async {
     await loaded();
-    expect(checkout().chooseSlot(DateTime(2026, 10, 29, 20, 15)), isFalse);
-    expect(checkout().chooseSlot(DateTime(2026, 10, 29, 10, 30)), isFalse);
+    expect(checkout().chooseSlot(DateTime(2026, 10, 29, 20, 5)), isFalse);
+    // 10:12 + 5 min = 10:17.
+    expect(checkout().chooseSlot(DateTime(2026, 10, 29, 10, 15)), isFalse);
     expect(
       container.read(checkoutControllerProvider).requireValue.pickupType,
       PickupType.asap,
     );
-    expect(checkout().chooseSlot(DateTime(2026, 10, 29, 10, 45)), isTrue);
+    expect(checkout().chooseSlot(DateTime(2026, 10, 29, 10, 20)), isTrue);
     final s = container.read(checkoutControllerProvider).requireValue;
     expect(s.pickupType, PickupType.scheduled);
-    expect(s.pickupTime, DateTime(2026, 10, 29, 10, 45));
+    expect(s.pickupTime, DateTime(2026, 10, 29, 10, 20));
   });
 
   test('a chosen slot that becomes too soon blocks Pay', () async {
     await signIn();
     await add(18);
     await loaded();
-    checkout().chooseSlot(DateTime(2026, 10, 29, 10, 45));
-    now = DateTime(2026, 10, 29, 10, 20); // 10:45 is now 25 min away
+    expect(checkout().chooseSlot(DateTime(2026, 10, 29, 10, 20)), isTrue);
+    now = DateTime(2026, 10, 29, 10, 17); // 10:20 is now 3 min away
     final result = await checkout().pay();
     expect(result, isA<CheckoutBlocked>());
     expect(

@@ -2,7 +2,8 @@ import '../models/store_info.dart';
 import '../repositories/store_repository.dart';
 
 /// The demo store: open every day 7:00 AM to 9:00 PM (Figma: "Open until
-/// 9:00 PM"), slots every 15 minutes, 30 minutes' lead time (BR-07).
+/// 9:00 PM"), slots every 10 minutes, 5 minutes' lead time (BR-07 says
+/// 30; Arthur chose 5 for the demo, README: Deviations).
 ///
 /// [pauseOnlineOrdering] stands in for staff pausing orders (FR-41, TC-20).
 class MockStoreRepository implements StoreRepository {
@@ -19,6 +20,8 @@ class MockStoreRepository implements StoreRepository {
     storeName: 'MOS Coffee',
     address: 'Street 240, Phnom Penh',
     phone: '012 345 678',
+    slotIntervalMin: 10,
+    minPrepMin: 5,
   );
 
   /// What staff do on the dashboard. Demo and tests only.
