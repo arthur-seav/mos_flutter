@@ -4,15 +4,20 @@ import 'money.dart';
 
 /// Order states (BR-08, data dictionary `orders.status`).
 enum OrderStatus {
-  pendingPayment,
-  placed,
-  confirmed,
-  preparing,
-  ready,
-  completed,
-  cancelled,
-  rejected,
-  abandoned,
+  pendingPayment('Pending payment'),
+  placed('Placed'),
+  confirmed('Confirmed'),
+  preparing('Preparing'),
+  ready('Ready'),
+  completed('Completed'),
+  cancelled('Cancelled'),
+  rejected('Rejected'),
+  abandoned('Abandoned');
+
+  const OrderStatus(this.label);
+
+  /// The status badge on the Orders tab ("Preparing", "Completed").
+  final String label;
 }
 
 /// `orders.pickup_type`.
