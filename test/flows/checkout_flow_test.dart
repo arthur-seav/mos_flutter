@@ -20,23 +20,6 @@ void main() {
     }
   }
 
-  /// Home -> Caramel Latte (defaults, $4.00) -> Add to cart -> cart ->
-  /// Go to checkout.
-  Future<void> orderCaramelLatte(WidgetTester tester) async {
-    await tester.tap(find.byTooltip('Add Caramel Latte'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text(r'Add to cart · $4.00'));
-    await tester.pumpAndSettle();
-    // The "Added to cart" notice covers the cart button until it closes.
-    await tester.pump(const Duration(seconds: 5));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Cart'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Go to checkout'));
-    await tester.pumpAndSettle();
-    expect(find.byType(CheckoutScreen), findsOneWidget);
-  }
-
   testWidgets(
     'TC-21: pay by KHQR -> success with a pickup code; cart emptied',
     (tester) async {
