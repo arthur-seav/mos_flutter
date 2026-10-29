@@ -63,7 +63,8 @@ class _KhqrPaymentScreenState extends ConsumerState<KhqrPaymentScreen> {
 
     ref.listen(provider, (previous, next) {
       final s = next.value;
-      if (s == null) return;
+      // Act once, when the stage changes, not on every countdown tick.
+      if (s == null || s.stage == previous?.value?.stage) return;
       switch (s.stage) {
         case KhqrStage.paid:
         case KhqrStage.failed:

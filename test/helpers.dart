@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/app.dart';
 import 'package:mos_app/data/mock/mock_backend.dart';
@@ -57,18 +58,28 @@ Future<ProviderContainer> pumpMosApp(
   Duration latency = Duration.zero,
   MenuRepository? menu,
   MockBackend? backend,
+  List<Override> extraOverrides = const [],
 }) async {
   tester.view.physicalSize = const Size(412, 917);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
 
-  final container = ProviderContainer.test(
-    overrides: (backend ?? testBackend(latency: latency, menu: menu)).overrides,
-  );
+  // ProviderScope owns the container, so it is disposed with the widget
+  // tree at the end of the test, and with it any timer a provider runs
+  // (the KHQR countdown).
   await tester.pumpWidget(
-    UncontrolledProviderScope(container: container, child: const MosApp()),
+    ProviderScope(
+      overrides: [
+        ...(backend ?? testBackend(latency: latency, menu: menu)).overrides,
+        ...extraOverrides,
+      ],
+      child: const MosApp(),
+    ),
   );
   await tester.pumpAndSettle();
+  final container = ProviderScope.containerOf(
+    tester.element(find.byType(MosApp)),
+  );
   return container;
 }
 

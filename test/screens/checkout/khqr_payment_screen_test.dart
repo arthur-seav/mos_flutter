@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/controllers/checkout/qr_saver.dart';
+import 'package:mos_app/data/mock/mock_backend.dart';
 import 'package:mos_app/data/mock/mock_menu_repository.dart';
 import 'package:mos_app/data/models/order.dart';
 import 'package:mos_app/router.dart';
@@ -28,7 +28,7 @@ class GalExceptionStub implements Exception {
 }
 
 void main() {
-  Future<Order> createOrder(dynamic backend) async {
+  Future<Order> createOrder(MockBackend backend) async {
     return backend.orders.createOrder(
       const OrderRequest(
         lines: [
@@ -71,8 +71,6 @@ void main() {
     now = now.add(const Duration(seconds: 1));
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('Expires in 04:59'), findsOneWidget);
-
-    c.dispose();
   });
 
   testWidgets('TC-21: paid within expiry goes to result and clears cart', (
@@ -94,17 +92,21 @@ void main() {
 
     // Paid 5s after the charge starts; the controller only polls on even
     // ticks, so the 6s poll is the first one to see it.
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < 5; i++) {
       now = now.add(const Duration(seconds: 1));
       await tester.pump(const Duration(seconds: 1));
     }
-    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byType(PaymentResultScreen), findsNothing); // not yet
+    now = now.add(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.byType(PaymentResultScreen), findsOneWidget);
     final result = tester.widget<PaymentResultScreen>(
       find.byType(PaymentResultScreen),
     );
     expect(result.outcome.isPaid, isTrue);
+    expect(result.outcome.order.pickupCode, 'A1024'); // FR-14
   });
 
   testWidgets('expired charge (never pays) goes to failed result', (
@@ -135,6 +137,10 @@ void main() {
       find.byType(PaymentResultScreen),
     );
     expect(result.outcome.isPaid, isFalse);
+    expect(
+      result.outcome.payment.failureReason,
+      'The QR code expired before payment was received.',
+    );
   });
 
   testWidgets('Cancel payment goes back to the cart', (tester) async {
@@ -162,49 +168,46 @@ void main() {
     expect(find.byType(CartScreen), findsOneWidget);
   });
 
-  testWidgets('Save QR to photos uses QrSaver and shows confirmation', (
-    tester,
-  ) async {
-    var now = testNow();
-    final b = testBackend(clock: () => now);
-    final fakeSaver = _FakeQrSaver();
-    final container = ProviderContainer.test(
-      overrides: [...b.overrides, qrSaverProvider.overrideWithValue(fakeSaver)],
+  Future<Order> openWithSaver(WidgetTester tester, _FakeQrSaver saver) async {
+    final b = testBackend();
+    final c = await pumpMosApp(
+      tester,
+      backend: b,
+      extraOverrides: [qrSaverProvider.overrideWithValue(saver)],
     );
-    tester.view.physicalSize = const Size(412, 917);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
-    await tester.pumpWidget(
-      UncontrolledProviderScope(container: container, child: const _TestApp()),
-    );
-    await tester.pumpAndSettle();
     await continueAsGuest(tester);
-
     late Order order;
     await tester.runAsync(() async {
       order = await createOrder(b);
     });
-
-    container.read(routerProvider).push(AppRoutes.khqr(order.id));
+    c.read(routerProvider).push(AppRoutes.khqr(order.id));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 400)); // page slid in
+    return order;
+  }
+
+  testWidgets('Save QR to photos saves the code and says so', (tester) async {
+    final saver = _FakeQrSaver();
+    final order = await openWithSaver(tester, saver);
 
     await tester.tap(find.text('Save QR to photos'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 400));
 
-    expect(fakeSaver.calls, hasLength(1));
-    expect(fakeSaver.calls.single, 'MOS-KHQR-${order.id}');
-    expect(find.text('QR code saved to Photos.'), findsWidgets);
-
-    container.dispose();
+    expect(saver.calls, ['MOS-KHQR-${order.id}']);
+    expect(find.text('QR code saved to Photos.'), findsOneWidget);
   });
-}
 
-class _TestApp extends ConsumerWidget {
-  const _TestApp();
+  testWidgets('when saving fails, the customer is told', (tester) async {
+    final saver = _FakeQrSaver()..throws = true;
+    await openWithSaver(tester, saver);
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) =>
-      MaterialApp.router(routerConfig: ref.watch(routerProvider));
+    await tester.tap(find.text('Save QR to photos'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(saver.calls, isEmpty);
+    expect(find.text('Could not save the QR code.'), findsOneWidget);
+    expect(find.text('QR code saved to Photos.'), findsNothing);
+  });
 }

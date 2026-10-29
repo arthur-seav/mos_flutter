@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mos_app/data/mock/mock_backend.dart';
 import 'package:mos_app/data/mock/mock_menu_repository.dart';
 import 'package:mos_app/data/models/order.dart';
 import 'package:mos_app/router.dart';
@@ -12,8 +14,8 @@ void main() {
   /// Opens checkout for a fresh order and pushes the card payment page.
   Future<Order> openCardPayment(
     WidgetTester tester,
-    dynamic backend,
-    dynamic container,
+    MockBackend backend,
+    ProviderContainer container,
   ) async {
     late Order order;
     await tester.runAsync(() async {
@@ -45,9 +47,12 @@ void main() {
     await continueAsGuest(tester);
     await openCardPayment(tester, backend, container);
 
-    expect(find.text('•••• •••• •••• 4242'), findsWidgets);
-    expect(find.text('DARA SOK'), findsWidgets);
-    expect(find.text('09/28'), findsWidgets);
+    // Once on the card picture, once in the summary below it.
+    expect(find.text('•••• •••• •••• 4242'), findsNWidgets(2));
+    expect(find.text('DARA SOK'), findsNWidgets(2));
+    expect(find.text('09/28'), findsNWidgets(2));
+    // Latte, Medium: $3.50.
+    expect(find.text(r'Pay $3.50'), findsOneWidget);
     expect(find.textContaining('4242424242424242'), findsNothing);
   });
 
@@ -107,9 +112,11 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Add card'));
     await tester.pumpAndSettle();
 
-    // The sheet closed and the new card is selected.
-    expect(find.text('Add card'), findsNothing);
-    expect(find.text('•••• •••• •••• 0002'), findsWidgets);
+    // The sheet closed and the new card is selected: the summary under
+    // the cards now shows it.
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(find.text('•••• •••• •••• 0002'), findsNWidgets(2));
+    expect(find.text('•••• •••• •••• 4242'), findsOneWidget); // picture only
 
     await tester.tap(find.byTooltip('Pay'));
     await tester.pumpAndSettle();

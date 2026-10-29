@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gal/gal.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
@@ -23,10 +21,9 @@ class QrSaver {
         shape: PrettyQrSmoothSymbol(color: AppColors.espresso),
       ),
     );
-    await Gal.putImageBytes(
-      (bytes ?? ByteData(0)).buffer.asUint8List(),
-      name: name,
-    );
+    // An empty file would look "saved" but show nothing: fail instead.
+    if (bytes == null) throw StateError('The QR code could not be drawn.');
+    await Gal.putImageBytes(bytes.buffer.asUint8List(), name: name);
   }
 }
 

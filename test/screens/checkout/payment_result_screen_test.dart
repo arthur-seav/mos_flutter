@@ -99,8 +99,7 @@ void main() {
 
       expect(find.text('Payment successful'), findsOneWidget);
       expect(find.text('#A1024'), findsOneWidget);
-      // intl's DateFormat.jm() puts a narrow no-break space before AM/PM.
-      expect(find.text('10:12\u202FAM'), findsOneWidget);
+      expect(find.text('10:12 AM'), findsOneWidget);
       expect(find.text('KHQR'), findsOneWidget);
       expect(find.text('\$7.00'), findsOneWidget);
       expect(

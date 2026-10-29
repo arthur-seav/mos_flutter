@@ -1,3 +1,4 @@
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,15 +11,14 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../utils/card_validators.dart';
 import '../../utils/clock.dart';
+import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/labeled_text_field.dart';
 import '../../widgets/common/loading_button.dart';
 import '../../widgets/common/square_icon_button.dart';
 
-/// SA 2.0 §4.2.3.3 Card: saved cards, adding a new card, and paying with
-/// the selected one (TC-22 covers a declined card).
-///
-/// Gap: the controller has no order total, so the button says "Pay now"
-/// instead of an amount like the Figma "Pay $7.00".
+/// SA 2.0 §4.2.3.3 Card: saved cards (last four digits only), adding a
+/// new card, and paying with the selected one (TC-22 covers a declined
+/// card). The check mark at the top and the button at the bottom both pay.
 class CardPaymentScreen extends ConsumerWidget {
   const CardPaymentScreen({super.key, required this.orderId});
 
@@ -51,9 +51,23 @@ class CardPaymentScreen extends ConsumerWidget {
                 AsyncData(:final value) => _Body(
                   orderId: orderId,
                   state: value,
+                  onPay: () => _pay(context, ref),
                 ),
-                AsyncError(:final error) => Center(child: Text('$error')),
-                _ => const Center(child: CircularProgressIndicator()),
+                AsyncError() => Center(
+                  child: EmptyState(
+                    icon: Icons.wifi_off_outlined,
+                    title: 'Could not load your cards',
+                    message: 'Check your connection and try again.',
+                    action: OutlinedButton(
+                      onPressed: () =>
+                          ref.invalidate(cardPaymentProvider(orderId)),
+                      child: const Text('Try again'),
+                    ),
+                  ),
+                ),
+                _ => const Center(
+                  child: CircularProgressIndicator(color: AppColors.espresso),
+                ),
               },
             ),
           ],
@@ -116,10 +130,15 @@ class _Header extends StatelessWidget {
 }
 
 class _Body extends ConsumerWidget {
-  const _Body({required this.orderId, required this.state});
+  const _Body({
+    required this.orderId,
+    required this.state,
+    required this.onPay,
+  });
 
   final int orderId;
   final CardPaymentState state;
+  final VoidCallback onPay;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -167,11 +186,9 @@ class _Body extends ConsumerWidget {
                   _ReadOnlyField(label: 'Expire Date', value: selected.expiry),
                   const SizedBox(height: 32),
                   LoadingButton(
-                    label: 'Pay now',
+                    label: 'Pay ${state.amount.format()}',
                     isLoading: state.isPaying,
-                    onPressed: state.canPay
-                        ? () => _payAndNavigate(context, ref)
-                        : null,
+                    onPressed: state.canPay ? onPay : null,
                   ),
                 ],
               ),
@@ -179,14 +196,6 @@ class _Body extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  Future<void> _payAndNavigate(BuildContext context, WidgetRef ref) async {
-    final notifier = ref.read(cardPaymentProvider(orderId).notifier);
-    final outcome = await notifier.pay();
-    if (outcome != null && context.mounted) {
-      context.pushReplacement(AppRoutes.paymentResult, extra: outcome);
-    }
   }
 }
 
@@ -310,24 +319,30 @@ class _AddCardTile extends StatelessWidget {
         isScrollControlled: true,
         builder: (_) => _AddCardSheet(orderId: orderId),
       ),
-      child: Container(
-        width: 160,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppColors.latte,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: AppColors.caramel,
-            style: BorderStyle.solid,
-          ),
+      // Dashed like Figma's "add" card.
+      child: DottedBorder(
+        options: const RoundedRectDottedBorderOptions(
+          radius: Radius.circular(20),
+          color: AppColors.caramel,
+          strokeWidth: 1.5,
+          dashPattern: [6, 4],
+          padding: EdgeInsets.zero,
         ),
-        child: const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.add, color: AppColors.mocha, size: 32),
-            SizedBox(height: 8),
-            Text('Add card', style: AppTextStyles.bodyMedium),
-          ],
+        child: Container(
+          width: 160,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.latte,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.add, color: AppColors.mocha, size: 32),
+              SizedBox(height: 8),
+              Text('Add card', style: AppTextStyles.bodyMedium),
+            ],
+          ),
         ),
       ),
     );

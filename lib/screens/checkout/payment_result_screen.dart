@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../app_routes.dart';
 import '../../controllers/checkout/payment_outcome.dart';
 import '../../data/models/order.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../utils/time_format.dart';
 
 /// SA 2.0 §4.2.3.4 Payment success / failed (TC-21, TC-22).
 ///
@@ -273,5 +273,4 @@ class _ResultRow extends StatelessWidget {
 }
 
 /// \"10:12 AM\", or \"--\" if the payment has no recorded time yet.
-String _formatTime(DateTime? time) =>
-    time == null ? '--' : DateFormat.jm().format(time);
+String _formatTime(DateTime? time) => time == null ? '--' : formatClock(time);

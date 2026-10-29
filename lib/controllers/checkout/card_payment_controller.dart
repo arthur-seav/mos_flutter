@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show immutable;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/models/money.dart';
 import '../../data/models/saved_card.dart';
 import '../../data/repository_providers.dart';
 import '../cart/cart_controller.dart';
@@ -9,11 +10,14 @@ import 'payment_outcome.dart';
 @immutable
 class CardPaymentState {
   const CardPaymentState({
+    required this.amount,
     required this.cards,
     this.selectedCardId,
     this.isPaying = false,
   });
 
+  /// The order's total, from the backend ("Pay $7.00").
+  final Money amount;
   final List<SavedCard> cards;
 
   /// Null when there is no saved card yet.
@@ -30,6 +34,7 @@ class CardPaymentState {
     int? selectedCardId,
     bool? isPaying,
   }) => CardPaymentState(
+    amount: amount,
     cards: cards ?? this.cards,
     selectedCardId: selectedCardId ?? this.selectedCardId,
     isPaying: isPaying ?? this.isPaying,
@@ -50,8 +55,10 @@ class CardPaymentController extends AsyncNotifier<CardPaymentState> {
 
   @override
   Future<CardPaymentState> build() async {
+    final order = await ref.read(orderRepositoryProvider).fetchOrder(orderId);
     final cards = await ref.read(cardRepositoryProvider).fetchCards();
     return CardPaymentState(
+      amount: order.totalAmount,
       cards: cards,
       selectedCardId: cards.firstOrNull?.id,
     );
@@ -68,7 +75,7 @@ class CardPaymentController extends AsyncNotifier<CardPaymentState> {
   Future<SavedCard> addCard(NewCard card) async {
     final saved = await ref.read(cardRepositoryProvider).addCard(card);
     final cards = await ref.read(cardRepositoryProvider).fetchCards();
-    final s = state.value ?? CardPaymentState(cards: cards);
+    final s = state.requireValue;
     state = AsyncData(s.copyWith(cards: cards, selectedCardId: saved.id));
     return saved;
   }
