@@ -32,7 +32,7 @@ class _PaymentResultScreenState extends State<PaymentResultScreen> {
     super.initState();
     if (widget.outcome.isPaid) {
       _redirectTimer = Timer(const Duration(seconds: 5), () {
-        if (mounted) context.go(AppRoutes.orders);
+        if (mounted) context.go(AppRoutes.order(widget.outcome.order.id));
       });
     }
   }
@@ -123,7 +123,7 @@ class _SuccessView extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           FilledButton(
-            onPressed: () => onNavigate(AppRoutes.orders),
+            onPressed: () => onNavigate(AppRoutes.order(outcome.order.id)),
             child: const Text('Track my order'),
           ),
           const SizedBox(height: 12),

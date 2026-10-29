@@ -6,7 +6,7 @@ import 'package:mos_app/screens/checkout/card_payment_screen.dart';
 import 'package:mos_app/screens/checkout/checkout_screen.dart';
 import 'package:mos_app/screens/checkout/khqr_payment_screen.dart';
 import 'package:mos_app/screens/checkout/payment_result_screen.dart';
-import 'package:mos_app/screens/orders/orders_screen.dart';
+import 'package:mos_app/screens/orders/order_tracking_screen.dart';
 import 'package:mos_app/widgets/checkout/choice_card.dart';
 
 import '../helpers.dart';
@@ -65,7 +65,7 @@ void main() {
 
       await tester.tap(find.text('Track my order'));
       await tester.pumpAndSettle();
-      expect(find.byType(OrdersScreen), findsOneWidget);
+      expect(find.byType(OrderTrackingScreen), findsOneWidget);
     },
   );
 

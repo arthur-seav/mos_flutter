@@ -19,6 +19,7 @@ import 'screens/auth/sign_up_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/menu/customize_drink_screen.dart';
 import 'screens/menu/menu_screen.dart';
+import 'screens/orders/order_tracking_screen.dart';
 import 'screens/orders/orders_screen.dart';
 import 'screens/shell/main_shell.dart';
 
@@ -122,6 +123,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.cardPattern,
         builder: (context, state) => CardPaymentScreen(
+          orderId: int.parse(state.pathParameters['orderId']!),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.orderPattern,
+        builder: (context, state) => OrderTrackingScreen(
           orderId: int.parse(state.pathParameters['orderId']!),
         ),
       ),

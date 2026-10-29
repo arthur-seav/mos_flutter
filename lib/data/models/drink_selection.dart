@@ -35,20 +35,31 @@ class DrinkSelection {
   factory DrinkSelection.fromCartItem(
     ProductCustomization customization,
     CartItem item,
-  ) {
+  ) => DrinkSelection.fromOptionIds(customization, [
+    for (final o in item.options) o.id,
+  ], quantity: item.quantity);
+
+  /// "Reorder" (TC-28): a past order's options on today's menu. Options
+  /// the drink no longer offers are dropped; their groups keep today's
+  /// defaults.
+  factory DrinkSelection.fromOptionIds(
+    ProductCustomization customization,
+    List<int> optionIds, {
+    int quantity = 1,
+  }) {
     final initial = DrinkSelection.initial(customization);
     final chosen = Map.of(initial.chosen);
     for (final g in customization.groups) {
       final ids = [
-        for (final o in item.options)
-          if (o.groupId == g.group.id && g.optionById(o.id) != null) o.id,
+        for (final id in optionIds)
+          if (g.optionById(id) != null) id,
       ];
       if (ids.isNotEmpty) chosen[g.group.id] = ids;
     }
     return DrinkSelection._(
       customization: customization,
       chosen: chosen,
-      quantity: item.quantity.clamp(1, maxQuantity),
+      quantity: quantity.clamp(1, maxQuantity),
     );
   }
 

@@ -23,6 +23,9 @@ class MockAuthRepository implements AuthRepository {
   /// Password of every built-in demo account.
   static const demoPassword = 'password123';
 
+  /// The demo customer (dara@example.com), who has past orders.
+  static const daraId = 1;
+
   static const _seedUsers = <User>[
     User(
       id: 1,
@@ -58,6 +61,10 @@ class MockAuthRepository implements AuthRepository {
 
   final _accounts = <int, ({User user, String password})>{};
 
+  /// Who is signed in, as the backend would know from the token. Orders
+  /// use it for `orders.customer_id`.
+  int? signedInUserId;
+
   /// Reset tickets handed out by [verifyAccountForReset], by token.
   final _resetTickets = <String, int>{};
   int _ticketCounter = 0;
@@ -74,11 +81,15 @@ class MockAuthRepository implements AuthRepository {
       // which emails or phone numbers have an account.
       throw const AuthException('Incorrect email/phone or password.');
     }
+    signedInUserId = account.user.id;
     return account.user;
   }
 
   @override
-  Future<void> signOut() => Future<void>.delayed(latency);
+  Future<void> signOut() async {
+    await Future<void>.delayed(latency);
+    signedInUserId = null;
+  }
 
   @override
   Future<User> signUp(SignUpRequest request) async {
@@ -103,6 +114,7 @@ class MockAuthRepository implements AuthRepository {
       role: UserRole.customer,
     );
     _accounts[user.id] = (user: user, password: request.password);
+    signedInUserId = user.id;
     return user;
   }
 

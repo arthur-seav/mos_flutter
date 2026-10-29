@@ -8,7 +8,7 @@ import 'package:mos_app/screens/checkout/card_payment_screen.dart';
 import 'package:mos_app/screens/checkout/checkout_screen.dart';
 import 'package:mos_app/screens/checkout/khqr_payment_screen.dart';
 import 'package:mos_app/screens/home/home_screen.dart';
-import 'package:mos_app/screens/orders/orders_screen.dart';
+import 'package:mos_app/screens/orders/order_tracking_screen.dart';
 
 import '../../helpers.dart';
 
@@ -111,13 +111,18 @@ void main() {
       expect(find.text('Taking you to your order...'), findsOneWidget);
     });
 
-    testWidgets('"Track my order" goes to Orders', (tester) async {
+    testWidgets('"Track my order" opens that order\'s tracking page', (
+      tester,
+    ) async {
       await openResult(tester, successOutcome());
 
       await tester.tap(find.text('Track my order'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(OrdersScreen), findsOneWidget);
+      final page = tester.widget<OrderTrackingScreen>(
+        find.byType(OrderTrackingScreen),
+      );
+      expect(page.orderId, successOutcome().order.id);
     });
 
     testWidgets('"Return to Home" goes to Home', (tester) async {
@@ -129,13 +134,15 @@ void main() {
       expect(find.byType(HomeScreen), findsOneWidget);
     });
 
-    testWidgets('auto-redirects to Orders after 5 seconds', (tester) async {
+    testWidgets('auto-redirects to the tracking page after 5 seconds', (
+      tester,
+    ) async {
       await openResult(tester, successOutcome());
 
       await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
 
-      expect(find.byType(OrdersScreen), findsOneWidget);
+      expect(find.byType(OrderTrackingScreen), findsOneWidget);
     });
   });
 

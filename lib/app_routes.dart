@@ -28,6 +28,10 @@ abstract final class AppRoutes {
   static const cardPattern = '/pay/card/:orderId';
   static String card(int orderId) => '/pay/card/$orderId';
 
+  /// Tracking one order (SA §4.2.4).
+  static const orderPattern = '/order/:orderId';
+  static String order(int orderId) => '/order/$orderId';
+
   /// Success or failure (SA §4.2.3.4). Needs a PaymentOutcome as `extra`.
   static const paymentResult = '/pay/result';
 
@@ -36,9 +40,11 @@ abstract final class AppRoutes {
   static String loginThenReturnTo(String path) =>
       '$login?from=${Uri.encodeQueryComponent(path)}';
 
-  /// Checkout and payment pages: signed-in customers only (BR-06).
+  /// Checkout, payment and order pages: signed-in customers only (BR-06).
   static bool isOrdering(String location) =>
-      location == checkout || location.startsWith('/pay/');
+      location == checkout ||
+      location.startsWith('/pay/') ||
+      location.startsWith('/order/');
 
   /// Pages for people who are not signed in. Everything else needs a
   /// session (customer or guest).

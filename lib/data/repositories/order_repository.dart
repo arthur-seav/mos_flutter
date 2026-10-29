@@ -37,6 +37,15 @@ abstract interface class OrderRepository {
 
   Future<Order> fetchOrder(int orderId);
 
+  /// The signed-in customer's orders, newest first (FR-18). Orders still
+  /// waiting for payment are left out.
+  Future<List<Order>> fetchMyOrders();
+
+  /// "Cancel order" (BR-09, TC-25): only while the order is Placed. A paid
+  /// payment becomes refund_pending. Throws [OrderException] once the
+  /// store has confirmed it (TC-26).
+  Future<Order> cancelOrder(int orderId);
+
   /// Starts a KHQR payment for an order still waiting to be paid.
   Future<KhqrCharge> startKhqr(int orderId);
 

@@ -21,8 +21,25 @@ abstract final class TopToast {
     String? actionLabel,
     VoidCallback? onAction,
     Duration duration = const Duration(seconds: 4),
+  }) => showIn(
+    Overlay.of(context, rootOverlay: true),
+    title: title,
+    message: message,
+    actionLabel: actionLabel,
+    onAction: onAction,
+    duration: duration,
+  );
+
+  /// For callers above the Navigator (the app-wide order alerts), which
+  /// have no [BuildContext] with an [Overlay].
+  static void showIn(
+    OverlayState overlay, {
+    required String title,
+    String? message,
+    String? actionLabel,
+    VoidCallback? onAction,
+    Duration duration = const Duration(seconds: 4),
   }) {
-    final overlay = Overlay.of(context, rootOverlay: true);
     hide();
     late final OverlayEntry entry;
     entry = OverlayEntry(
