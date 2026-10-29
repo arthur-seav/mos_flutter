@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import 'app_routes.dart';
 import 'data/repositories/auth_repository.dart';
+import 'screens/account/change_password_screen.dart';
+import 'screens/account/edit_profile_screen.dart';
 import 'screens/account/profile_screen.dart';
 import 'controllers/checkout/payment_outcome.dart';
 import 'screens/cart/cart_screen.dart';
@@ -125,6 +127,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => CardPaymentScreen(
           orderId: int.parse(state.pathParameters['orderId']!),
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.editProfile,
+        builder: (context, state) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.changePassword,
+        builder: (context, state) => const ChangePasswordScreen(),
       ),
       GoRoute(
         path: AppRoutes.orderPattern,
