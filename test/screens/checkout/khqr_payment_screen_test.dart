@@ -16,9 +16,9 @@ class _FakeQrSaver implements QrSaver {
   bool throws = false;
 
   @override
-  Future<void> save(String data, String name) async {
+  Future<void> save(KhqrCharge charge, Order order) async {
     if (throws) throw const GalExceptionStub();
-    calls.add(name);
+    calls.add(QrSaver.fileName(order));
   }
 }
 
@@ -194,7 +194,8 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(saver.calls, ['MOS-KHQR-${order.id}']);
+    // Order made at testNow(), Thursday 29 Oct 2026, 10:12.
+    expect(saver.calls, ['MOS-KHQR-order${order.id}-20261029-1012']);
     expect(find.text('QR code saved to Photos.'), findsOneWidget);
   });
 

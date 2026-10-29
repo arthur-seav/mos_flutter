@@ -32,6 +32,11 @@ To preview in a browser: `flutter run -d chrome`.
 | `email_validator` | Email format check. |
 | `intl` | Price formatting (`$3.50`). |
 | `phone_numbers_parser` | Phone number check (Dart port of Google's libphonenumber). |
+| `pretty_qr_code` | Draws the KHQR code on the payment page and in the saved picture. |
+| `gal` | "Save QR to photos": writes the picture to the phone's photo library (Android / iOS; no web support, so the button is hidden on web). |
+| `screenshot` 3.0.x | Draws the saved KHQR picture (logo, QR, order, drinks, dates) off screen, without showing it on the page. Last release May 2024, but it works with the Flutter 3.41 render API and is widely used; Flutter itself can only capture widgets that are on screen. |
+
+Written by hand: card number (Luhn), expiry and CVV checks in `utils/card_validators.dart`. `credit_card_validator` was last released in 2023 for Dart 2, and `flutter_credit_card` brings its own card UI and native code that the Figma design does not need.
 
 ## Project structure
 
@@ -123,6 +128,8 @@ The cart stays in the app until checkout (SA §3.5). Before checkout the app ask
 | Card `4000 0000 0000 0002` (add it on the card page) | Declined, to show TC-22. |
 
 The mock backend works out every price from the menu and ignores any amount the app could send (TC-23). Guests are asked to log in before paying (BR-06).
+
+**Save QR to photos** (KHQR page) saves a picture, not just the code: the logo, order number, amount, QR code, when it expires, when the order was made, the pickup time and the drinks with their prices. Dates are written in full ("Thu, 29 Oct 2026"), and the file is named `MOS-KHQR-order<id>-<yyyyMMdd-HHmm>`, so an old picture can be told apart. The button only shows on Android / iOS (not on web). After pulling, run `flutter pub get` and restart the app fully: hot reload does not load the new native plugin.
 
 To try **Forgot password**, use `012 345 678` or `098 765 432`; any other number gives "Account not found." (TC-06).
 

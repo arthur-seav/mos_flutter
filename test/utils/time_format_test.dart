@@ -7,4 +7,9 @@ void main() {
     expect(formatClock(DateTime(2026, 10, 29, 10, 45)), '10:45 AM');
     expect(formatClock(DateTime(2026, 10, 29, 0, 5)), '12:05 AM');
   });
+
+  test('date with the weekday', () {
+    expect(formatDate(DateTime(2026, 10, 29, 10, 12)), 'Thu, 29 Oct 2026');
+    expect(formatDate(DateTime(2026, 11, 1)), 'Sun, 1 Nov 2026');
+  });
 }

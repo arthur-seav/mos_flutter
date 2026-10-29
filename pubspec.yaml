@@ -42,6 +42,7 @@ dependencies:
   intl: ^0.20.3
   phone_numbers_parser: ^9.0.28
   pretty_qr_code: ^3.6.0
+  screenshot: ^3.0.0
 
 dev_dependencies:
   flutter_test:

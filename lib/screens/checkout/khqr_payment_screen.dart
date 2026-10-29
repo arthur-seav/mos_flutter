@@ -28,12 +28,12 @@ class KhqrPaymentScreen extends ConsumerStatefulWidget {
 class _KhqrPaymentScreenState extends ConsumerState<KhqrPaymentScreen> {
   bool _saving = false;
 
-  Future<void> _saveQr(String data, int orderId) async {
+  Future<void> _saveQr(KhqrState state) async {
     if (_saving) return;
     setState(() => _saving = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      await ref.read(qrSaverProvider).save(data, 'MOS-KHQR-$orderId');
+      await ref.read(qrSaverProvider).save(state.charge, state.order);
       messenger
         ..hideCurrentSnackBar()
         ..showSnackBar(
@@ -114,7 +114,7 @@ class _KhqrPaymentScreenState extends ConsumerState<KhqrPaymentScreen> {
                 data: (state) => _KhqrBody(
                   state: state,
                   saving: _saving,
-                  onSave: () => _saveQr(state.charge.qrData, widget.orderId),
+                  onSave: () => _saveQr(state),
                 ),
               ),
             ),

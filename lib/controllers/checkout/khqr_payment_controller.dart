@@ -28,12 +28,16 @@ enum KhqrStage {
 class KhqrState {
   const KhqrState({
     required this.charge,
+    required this.order,
     required this.stage,
     required this.timeLeft,
     this.outcome,
   });
 
   final KhqrCharge charge;
+
+  /// What is being paid for: the saved QR image lists it.
+  final Order order;
   final KhqrStage stage;
 
   /// "Expires in 04:59".
@@ -55,6 +59,7 @@ class KhqrState {
     PaymentOutcome? outcome,
   }) => KhqrState(
     charge: charge,
+    order: order,
     stage: stage ?? this.stage,
     timeLeft: timeLeft ?? this.timeLeft,
     outcome: outcome ?? this.outcome,
@@ -82,11 +87,14 @@ class KhqrPaymentController extends AsyncNotifier<KhqrState> {
 
   @override
   Future<KhqrState> build() async {
-    final charge = await ref.read(orderRepositoryProvider).startKhqr(orderId);
+    final orders = ref.read(orderRepositoryProvider);
+    final order = await orders.fetchOrder(orderId);
+    final charge = await orders.startKhqr(orderId);
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
     ref.onDispose(() => _ticker?.cancel());
     return KhqrState(
       charge: charge,
+      order: order,
       stage: KhqrStage.waiting,
       timeLeft: charge.expiresAt.difference(ref.read(clockProvider)()),
     );

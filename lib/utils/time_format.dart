@@ -7,3 +7,7 @@ import 'package:intl/intl.dart';
 /// searched and compared like any other ("9:00 PM").
 String formatClock(DateTime time) =>
     DateFormat.jm('en_US').format(time).replaceAll('\u202f', ' ');
+
+/// "Thu, 29 Oct 2026"
+String formatDate(DateTime time) =>
+    DateFormat('EEE, d MMM y', 'en_US').format(time);
