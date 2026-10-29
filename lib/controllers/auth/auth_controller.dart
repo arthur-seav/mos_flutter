@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/models/profile_update.dart';
 import '../../data/models/sign_up_request.dart';
 import '../../data/models/user.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -90,6 +91,43 @@ class AuthController extends Notifier<AuthState> {
     required PasswordResetTicket ticket,
     required String newPassword,
   }) => _repository.resetPassword(ticket: ticket, newPassword: newPassword);
+
+  /// "Edit Personal Info" (FR-04, TC-07): the profile shows the saved
+  /// details at once.
+  Future<void> updateProfile({
+    required String fullName,
+    String? email,
+    String? phone,
+    DateTime? dateOfBirth,
+  }) async {
+    final user = state.user;
+    if (user == null) throw const AuthException('Please log in first.');
+    final updated = await _repository.updateProfile(
+      ProfileUpdate(
+        userId: user.id,
+        fullName: fullName,
+        email: email,
+        phone: phone,
+        dateOfBirth: dateOfBirth,
+      ),
+    );
+    if (!ref.mounted) return;
+    state = AuthState.customer(updated);
+  }
+
+  /// "Change Password" while signed in (FR-30). The session stays.
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) {
+    final user = state.user;
+    if (user == null) throw const AuthException('Please log in first.');
+    return _repository.changePassword(
+      userId: user.id,
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+    );
+  }
 
   Future<void> signOut() async {
     if (state.isCustomer) await _repository.signOut();

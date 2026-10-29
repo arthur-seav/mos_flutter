@@ -11,6 +11,7 @@ import 'package:mos_app/data/mock/mock_menu_repository.dart';
 import 'package:mos_app/data/models/drink_option.dart';
 import 'package:mos_app/data/models/product_customization.dart';
 import 'package:mos_app/data/repositories/menu_repository.dart';
+import 'package:mos_app/data/repositories/settings_repository.dart';
 
 /// Thursday 29 October 2026, 10:12 AM: the store (7 AM - 9 PM) is open,
 /// so ASAP works and the first pickup slot is 10:20 (BR-07, 5 min lead).
@@ -73,6 +74,9 @@ Future<ProviderContainer> pumpMosApp(
     ProviderScope(
       overrides: [
         ...(backend ?? testBackend(latency: latency, menu: menu)).overrides,
+        settingsRepositoryProvider.overrideWithValue(
+          InMemorySettingsRepository(),
+        ),
         ...extraOverrides,
       ],
       child: const MosApp(),

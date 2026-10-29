@@ -14,6 +14,7 @@ class User {
     required this.role,
     this.email,
     this.phone,
+    this.dateOfBirth,
     this.status = AccountStatus.active,
   });
 
@@ -26,6 +27,9 @@ class User {
   /// so either one may be missing.
   final String? email;
   final String? phone;
+
+  /// Optional (`users.date_of_birth`).
+  final DateTime? dateOfBirth;
   final AccountStatus status;
 
   String get fullName => '$firstName $lastName';
@@ -34,4 +38,10 @@ class User {
 
   /// SA §1.5: staff and admins work on the admin side only.
   bool get isCustomer => role == UserRole.customer;
+
+  /// "DS" for Dara Sok, on the profile picture.
+  String get initials => [
+    firstName,
+    lastName,
+  ].where((n) => n.isNotEmpty).map((n) => n[0].toUpperCase()).join();
 }

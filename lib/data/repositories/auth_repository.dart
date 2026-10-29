@@ -1,3 +1,4 @@
+import '../models/profile_update.dart';
 import '../models/sign_up_request.dart';
 import '../models/user.dart';
 
@@ -44,6 +45,18 @@ abstract interface class AuthRepository {
   /// Step 2: sets a new password for the verified account (TC-05).
   Future<void> resetPassword({
     required PasswordResetTicket ticket,
+    required String newPassword,
+  });
+
+  /// "Edit Personal Info" (FR-04, TC-07). Fails when the email or phone
+  /// number belongs to another account, or when both are left empty.
+  Future<User> updateProfile(ProfileUpdate update);
+
+  /// "Change Password" while signed in (FR-30, SA §4.2.5.3). Fails when
+  /// [currentPassword] is wrong.
+  Future<void> changePassword({
+    required int userId,
+    required String currentPassword,
     required String newPassword,
   });
 }

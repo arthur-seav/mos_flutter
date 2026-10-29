@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mos_app/controllers/account/notification_settings_controller.dart';
 import 'package:mos_app/controllers/auth/auth_controller.dart';
 import 'package:mos_app/controllers/orders/order_alerts_controller.dart';
 import 'package:mos_app/controllers/orders/order_tracking_controller.dart';
@@ -7,6 +8,7 @@ import 'package:mos_app/data/mock/mock_auth_repository.dart';
 import 'package:mos_app/data/mock/mock_backend.dart';
 import 'package:mos_app/data/mock/mock_menu_repository.dart';
 import 'package:mos_app/data/models/order.dart';
+import 'package:mos_app/data/repositories/settings_repository.dart';
 
 import '../../helpers.dart';
 
@@ -23,6 +25,9 @@ void main() {
         ...backend.overrides,
         trackingPollProvider.overrideWithValue(null),
         orderAlertsPollProvider.overrideWithValue(null),
+        settingsRepositoryProvider.overrideWithValue(
+          InMemorySettingsRepository(),
+        ),
       ],
     );
     await container
@@ -164,6 +169,20 @@ void main() {
       container.read(authControllerProvider.notifier).continueAsGuest();
       final alerts = container.listen(orderAlertsProvider, (_, _) {});
       addTearDown(alerts.close);
+      await container.read(orderAlertsProvider.notifier).poll();
+      expect(container.read(orderAlertsProvider), isNull);
+    });
+
+    test('the Notifications switch off: no notice', () async {
+      final o = await paidOrder();
+      await container.read(notificationsEnabledProvider.notifier).set(false);
+      final alerts = container.listen(orderAlertsProvider, (_, _) {});
+      addTearDown(alerts.close);
+      await container.read(orderAlertsProvider.notifier).poll();
+      backend.orders
+        ..staffAdvance(o.id)
+        ..staffAdvance(o.id)
+        ..staffAdvance(o.id);
       await container.read(orderAlertsProvider.notifier).poll();
       expect(container.read(orderAlertsProvider), isNull);
     });

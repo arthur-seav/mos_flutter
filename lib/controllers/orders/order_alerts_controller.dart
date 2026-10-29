@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/order.dart';
 import '../../data/repository_providers.dart';
+import '../account/notification_settings_controller.dart';
 import '../auth/auth_controller.dart';
 
 /// A notice for the customer: their order is ready (FR-16) or the store
@@ -81,6 +82,15 @@ class OrderAlertsController extends Notifier<OrderAlert?> {
     return null;
   }
 
+  /// The profile page's "Notifications" switch.
+  Future<bool> _wanted() async {
+    try {
+      return await ref.read(notificationsEnabledProvider.future);
+    } on Object {
+      return true;
+    }
+  }
+
   Future<void> poll() async {
     if (_busy || !ref.read(authControllerProvider).isCustomer) return;
     _busy = true;
@@ -92,7 +102,7 @@ class OrderAlertsController extends Notifier<OrderAlert?> {
         _seen[order.id] = order.status;
         if (!_hasLooked || before == order.status) continue;
         final alert = OrderAlert.forChange(order);
-        if (alert != null) state = alert;
+        if (alert != null && await _wanted()) state = alert;
       }
       _hasLooked = true;
     } on Object {

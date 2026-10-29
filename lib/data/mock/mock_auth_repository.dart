@@ -1,4 +1,5 @@
 import '../../utils/validators.dart';
+import '../models/profile_update.dart';
 import '../models/sign_up_request.dart';
 import '../models/user.dart';
 import '../repositories/auth_repository.dart';
@@ -148,6 +149,58 @@ class MockAuthRepository implements AuthRepository {
     }
     _accounts[userId!] = (user: account.user, password: newPassword);
   }
+
+  @override
+  Future<User> updateProfile(ProfileUpdate update) async {
+    await Future<void>.delayed(latency);
+    final account = _accounts[update.userId];
+    if (account == null) throw const AuthException('Account not found.');
+    final email = _blankToNull(update.email)?.toLowerCase();
+    final phone = _blankToNull(update.phone);
+    final normalized = phone == null ? null : normalizePhone(phone);
+    if (email == null && normalized == null) {
+      throw const AuthException('Keep an email or a phone number.');
+    }
+    final emailOwner = email == null ? null : _findByEmail(email);
+    if (emailOwner != null && emailOwner.user.id != update.userId) {
+      throw const AuthException('This email is already registered.');
+    }
+    final phoneOwner = normalized == null ? null : _findByPhone(normalized);
+    if (phoneOwner != null && phoneOwner.user.id != update.userId) {
+      throw const AuthException('This phone number is already registered.');
+    }
+    final name = update.splitName;
+    final old = account.user;
+    final user = User(
+      id: old.id,
+      firstName: name.first,
+      lastName: name.last,
+      role: old.role,
+      email: email,
+      phone: normalized,
+      dateOfBirth: update.dateOfBirth,
+      status: old.status,
+    );
+    _accounts[user.id] = (user: user, password: account.password);
+    return user;
+  }
+
+  @override
+  Future<void> changePassword({
+    required int userId,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await Future<void>.delayed(latency);
+    final account = _accounts[userId];
+    if (account == null || account.password != currentPassword) {
+      throw const AuthException('Your current password is incorrect.');
+    }
+    _accounts[userId] = (user: account.user, password: newPassword);
+  }
+
+  static String? _blankToNull(String? value) =>
+      value == null || value.trim().isEmpty ? null : value.trim();
 
   ({User user, String password})? _findByIdentifier(String identifier) {
     final value = identifier.trim();
