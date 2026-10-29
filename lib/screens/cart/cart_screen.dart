@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app_routes.dart';
+import '../../controllers/auth/auth_controller.dart';
 import '../../controllers/cart/cart_controller.dart';
 import '../../data/models/cart_item.dart';
 import '../../data/models/money.dart';
@@ -10,13 +11,15 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/cart/add_more_button.dart';
 import '../../widgets/cart/cart_line_card.dart';
+import '../../widgets/common/login_required_dialog.dart';
 import '../../widgets/common/square_icon_button.dart';
 
 /// SA 2.0 §4.2.2.4 Cart (FR-10, BR-05).
 ///
 /// Shows every [CartItem] with its price and quantity, lets the customer
 /// change quantities, remove lines or edit a line's options, and checks
-/// for sold-out drinks (BR-05) before moving on to checkout.
+/// for sold-out drinks (BR-05) before moving on to checkout. Guests are
+/// asked to log in at "Go to checkout" (BR-06, TC-18).
 class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
 
@@ -27,18 +30,34 @@ class CartScreen extends ConsumerStatefulWidget {
 class _CartScreenState extends ConsumerState<CartScreen> {
   bool _checking = false;
 
+  /// BR-06 / TC-18: a guest logs in first, then comes back here and on to
+  /// checkout, with the cart kept. Back on the login page, or "Not now",
+  /// stays on the cart.
+  Future<bool> _signedIn() async {
+    if (ref.read(authControllerProvider).isCustomer) return true;
+    if (!await askGuestToLogIn(context) || !mounted) return false;
+    final ok = await context.push<bool>(
+      AppRoutes.loginThenReturnTo(AppRoutes.checkout),
+    );
+    return ok == true && mounted;
+  }
+
   Future<void> _goToCheckout() async {
+    if (!await _signedIn()) return;
     setState(() => _checking = true);
     final notifier = ref.read(cartControllerProvider.notifier);
     final removed = await notifier.removeUnavailable();
     if (!mounted) return;
     setState(() => _checking = false);
-    final message = removed.isEmpty
-        ? 'Checkout comes in the next step.'
-        : CartController.unavailableMessage(removed);
+    if (removed.isEmpty) {
+      context.push(AppRoutes.checkout);
+      return;
+    }
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(
+        SnackBar(content: Text(CartController.unavailableMessage(removed))),
+      );
   }
 
   @override

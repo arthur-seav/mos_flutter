@@ -19,7 +19,7 @@ void main() {
   );
 
   setUp(() {
-    container = ProviderContainer.test(overrides: mockOverrides());
+    container = ProviderContainer.test(overrides: testBackend().overrides);
   });
 
   test('starts with no session', () {

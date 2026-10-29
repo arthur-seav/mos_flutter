@@ -93,7 +93,8 @@ void main() {
 
     await tester.tap(find.widgetWithText(NavigationDestination, 'Profile'));
     await tester.pumpAndSettle();
-    expect(find.text('Signed in as Dara Sok'), findsOneWidget);
+    // The profile page now shows the customer's name on its user card.
+    expect(find.text('Dara Sok'), findsOneWidget);
 
     await tester.tap(find.text('Sign out'));
     await tester.pumpAndSettle();

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme/app_scroll_behavior.dart';
 import 'theme/app_theme.dart';
 import 'router.dart';
+import 'widgets/orders/order_alert_host.dart';
 
 class MosApp extends ConsumerWidget {
   const MosApp({super.key});
@@ -16,6 +17,8 @@ class MosApp extends ConsumerWidget {
       theme: AppTheme.light,
       scrollBehavior: const AppScrollBehavior(),
       routerConfig: ref.watch(routerProvider),
+      builder: (context, child) =>
+          OrderAlertHost(child: child ?? const SizedBox.shrink()),
     );
   }
 }

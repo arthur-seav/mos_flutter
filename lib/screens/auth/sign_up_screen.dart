@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../controllers/common/submit_state.dart';
 import '../../utils/validators.dart';
@@ -17,7 +18,9 @@ import '../../widgets/auth/auth_title.dart';
 ///
 /// A guest creates a customer account with an email or a phone number
 /// (FR-02). After a short success message the new customer is signed in
-/// and the router takes them to Home (TC-02).
+/// and the router takes them to Home (TC-02). A guest who came here from
+/// the login page before ordering (BR-06) is taken back instead, and on
+/// to checkout.
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
 
@@ -52,6 +55,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
     if (!_formKey.currentState!.validate()) return;
 
     final auth = ref.read(authControllerProvider.notifier);
+    final wasGuest = ref.read(authControllerProvider).isGuest;
     final request = SignUpRequest(
       fullName: _nameController.text,
       email: _nullIfEmpty(_emailController),
@@ -64,8 +68,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
       if (!mounted) return;
       setState(() => _created = true);
       await Future<void>.delayed(authStatusDisplayTime);
-      // Signing in makes the router leave this page for Home.
+      // Signing in makes the router leave this page for Home. A guest
+      // already had a session, so the router does not re-check: go back
+      // to the login page, which carries on (BR-06).
       auth.startSession(user);
+      if (wasGuest && mounted && context.canPop()) context.pop(true);
     });
     if (!ok && mounted) setState(() => _created = false);
   }

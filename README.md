@@ -32,6 +32,11 @@ To preview in a browser: `flutter run -d chrome`.
 | `email_validator` | Email format check. |
 | `intl` | Price formatting (`$3.50`). |
 | `phone_numbers_parser` | Phone number check (Dart port of Google's libphonenumber). |
+| `pretty_qr_code` | Draws the KHQR code on the payment page and in the saved picture. |
+| `gal` | "Save QR to photos": writes the picture to the phone's photo library (Android / iOS; no web support, so the button is hidden on web). |
+| `screenshot` 3.0.x | Draws the saved KHQR picture (logo, QR, order, drinks, dates) off screen, without showing it on the page. Last release May 2024, but it works with the Flutter 3.41 render API and is widely used; Flutter itself can only capture widgets that are on screen. |
+
+Written by hand: card number (Luhn), expiry and CVV checks in `utils/card_validators.dart`. `credit_card_validator` was last released in 2023 for Dart 2, and `flutter_credit_card` brings its own card UI and native code that the Figma design does not need.
 
 ## Project structure
 
@@ -112,7 +117,19 @@ Drink options follow the test cases: Espresso is hot only (TC-10), Caramel Latte
 Espresso has **Shots** instead of a cup size (BR-01): Single -$0.50, Double (default), Triple +$0.50; "Extra shot" stays in the add-ons for a 4th shot.
 Size and shot buttons show the price against the current choice ("Small -$0.50 · Medium +$0.00 · Large +$0.50"); the data keeps each option's own extra price (BR-03).
 
-The cart stays in the app until checkout (SA §3.5). Before checkout the app asks which drinks sold out and removes them (BR-05). `MockMenuRepository.markSoldOut(id)` stands in for staff marking a drink sold out, for TC-17 in the tests. "Go to checkout" stops at a message until the checkout step is built.
+The cart stays in the app until checkout (SA §3.5). Before checkout the app asks which drinks sold out and removes them (BR-05). `MockMenuRepository.markSoldOut(id)` stands in for staff marking a drink sold out, for TC-17 in the tests.
+
+**Checkout and payment (mock).** The demo store is open 7:00 AM – 9:00 PM every day, and the schedule panel offers the next 6 pickup times: the first at least 5 minutes ahead, rounded up to a 5-minute mark, then every 10 minutes, none after 8:00 PM (BR-07, TC-19). At 10:41 that is 10:50, 11:00 … 11:40. Payments work like a gateway's test mode:
+
+| Method | What happens |
+|---|---|
+| KHQR | Paid 5 seconds after the QR code appears (TC-21). The QR expires after 5 minutes. |
+| Card ending 4242 (saved for Dara) | Paid. |
+| Card `4000 0000 0000 0002` (add it on the card page) | Declined, to show TC-22. |
+
+The mock backend works out every price from the menu and ignores any amount the app could send (TC-23). Guests are asked to log in when they tap "Go to checkout" in the cart (BR-06, TC-18); signing in or creating an account there takes them on to checkout with the cart kept, and a link straight to checkout or a payment page sends a guest to login first.
+
+**Save QR to photos** (KHQR page) saves a picture, not just the code: the logo, order number, amount, QR code, when it expires, when the order was made, the pickup time and the drinks with their prices. Dates are written in full ("Thu, 29 Oct 2026"), and the file is named `MOS-KHQR-order<id>-<yyyyMMdd-HHmm>`, so an old picture can be told apart. The button only shows on Android / iOS (not on web). After pulling, run `flutter pub get` and restart the app fully: hot reload does not load the new native plugin.
 
 To try **Forgot password**, use `012 345 678` or `098 765 432`; any other number gives "Account not found." (TC-06).
 
@@ -121,7 +138,14 @@ To try **Forgot password**, use `012 345 678` or `098 765 432`; any other number
 - **Ice level for hot drinks (BR-01).** The data dictionary has no way to say "this group only applies to iced drinks". The app adds two fields: `OptionGroup.needsIcedDrink` (true for Ice level) and `DrinkOption.isIced` (true for Iced). The backend needs the same, or a fixed rule.
 - **Short option names in cart lines.** Ice level and sweetness both use "Less / Regular / Extra". The app adds `OptionGroup.summaryNoun` ("ice", "sugar") so cart and order lines read "Less ice · Regular sugar".
 - **Negative extra prices.** Espresso's Single shot is -$0.50 from the default Double. `options.extra_price` is NUMERIC, so this fits, but the data dictionary only says "0 if free"; it should say discounts are allowed.
+- **ASAP ready time.** Checkout says "Ready in about 10 min" (Figma). There is no field for it; the app adds `StoreSettings.asapPrepMin`.
+- **Card holder name.** Figma shows the holder's name on a saved card; `saved_cards` has no column for it. The app keeps `SavedCard.holderName`.
+- **Why a payment failed.** The failure screen says why ("Your card was declined.", "The QR code expired…"). `payments` has no column for it; the app reads `Payment.failureReason` from the gateway's reply.
 - **Options a drink does not offer (TC-10: Espresso is Hot only).** `product_options` is described as a price override only. The app also reads it as "the options this drink offers" when a drink has rows for a group.
+
+## Deviations from SA 2.0
+
+- **Pickup lead time (BR-07).** SA 2.0 says a scheduled slot must be at least 30 minutes after the order (`store_settings.min_prep_min`, default 30). The demo store uses **5 minutes**, with slots every 10 minutes (Arthur's decision, 2026-10-29). Only the mock data changed: the app reads both values from `store_settings`, so a store set to 30 / 15 behaves as SA 2.0 says (tested in `test/data/pickup_schedule_test.dart`). The schedule panel shows the next 6 times instead of the whole day; SA 2.0 does not fix a number. The SA document should be updated, or the store reset to 30.
 
 ## Fonts
 

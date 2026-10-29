@@ -1,4 +1,5 @@
 import '../../utils/validators.dart';
+import '../models/profile_update.dart';
 import '../models/sign_up_request.dart';
 import '../models/user.dart';
 import '../repositories/auth_repository.dart';
@@ -22,6 +23,9 @@ class MockAuthRepository implements AuthRepository {
 
   /// Password of every built-in demo account.
   static const demoPassword = 'password123';
+
+  /// The demo customer (dara@example.com), who has past orders.
+  static const daraId = 1;
 
   static const _seedUsers = <User>[
     User(
@@ -58,6 +62,10 @@ class MockAuthRepository implements AuthRepository {
 
   final _accounts = <int, ({User user, String password})>{};
 
+  /// Who is signed in, as the backend would know from the token. Orders
+  /// use it for `orders.customer_id`.
+  int? signedInUserId;
+
   /// Reset tickets handed out by [verifyAccountForReset], by token.
   final _resetTickets = <String, int>{};
   int _ticketCounter = 0;
@@ -74,11 +82,15 @@ class MockAuthRepository implements AuthRepository {
       // which emails or phone numbers have an account.
       throw const AuthException('Incorrect email/phone or password.');
     }
+    signedInUserId = account.user.id;
     return account.user;
   }
 
   @override
-  Future<void> signOut() => Future<void>.delayed(latency);
+  Future<void> signOut() async {
+    await Future<void>.delayed(latency);
+    signedInUserId = null;
+  }
 
   @override
   Future<User> signUp(SignUpRequest request) async {
@@ -103,6 +115,7 @@ class MockAuthRepository implements AuthRepository {
       role: UserRole.customer,
     );
     _accounts[user.id] = (user: user, password: request.password);
+    signedInUserId = user.id;
     return user;
   }
 
@@ -136,6 +149,58 @@ class MockAuthRepository implements AuthRepository {
     }
     _accounts[userId!] = (user: account.user, password: newPassword);
   }
+
+  @override
+  Future<User> updateProfile(ProfileUpdate update) async {
+    await Future<void>.delayed(latency);
+    final account = _accounts[update.userId];
+    if (account == null) throw const AuthException('Account not found.');
+    final email = _blankToNull(update.email)?.toLowerCase();
+    final phone = _blankToNull(update.phone);
+    final normalized = phone == null ? null : normalizePhone(phone);
+    if (email == null && normalized == null) {
+      throw const AuthException('Keep an email or a phone number.');
+    }
+    final emailOwner = email == null ? null : _findByEmail(email);
+    if (emailOwner != null && emailOwner.user.id != update.userId) {
+      throw const AuthException('This email is already registered.');
+    }
+    final phoneOwner = normalized == null ? null : _findByPhone(normalized);
+    if (phoneOwner != null && phoneOwner.user.id != update.userId) {
+      throw const AuthException('This phone number is already registered.');
+    }
+    final name = update.splitName;
+    final old = account.user;
+    final user = User(
+      id: old.id,
+      firstName: name.first,
+      lastName: name.last,
+      role: old.role,
+      email: email,
+      phone: normalized,
+      dateOfBirth: update.dateOfBirth,
+      status: old.status,
+    );
+    _accounts[user.id] = (user: user, password: account.password);
+    return user;
+  }
+
+  @override
+  Future<void> changePassword({
+    required int userId,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await Future<void>.delayed(latency);
+    final account = _accounts[userId];
+    if (account == null || account.password != currentPassword) {
+      throw const AuthException('Your current password is incorrect.');
+    }
+    _accounts[userId] = (user: account.user, password: newPassword);
+  }
+
+  static String? _blankToNull(String? value) =>
+      value == null || value.trim().isEmpty ? null : value.trim();
 
   ({User user, String password})? _findByIdentifier(String identifier) {
     final value = identifier.trim();

@@ -19,6 +19,40 @@ abstract final class AppRoutes {
   /// The cart (FR-10), opened over the tabs.
   static const cart = '/cart';
 
+  /// Checkout (FR-11 to FR-13).
+  static const checkout = '/checkout';
+
+  /// Paying for an order that is waiting for payment.
+  static const khqrPattern = '/pay/khqr/:orderId';
+  static String khqr(int orderId) => '/pay/khqr/$orderId';
+  static const cardPattern = '/pay/card/:orderId';
+  static String card(int orderId) => '/pay/card/$orderId';
+
+  /// "Edit Personal Info" and "Change Password" (SA §4.2.5.2–3), over
+  /// the tabs.
+  static const editProfile = '/account/edit';
+  static const changePassword = '/account/password';
+
+  /// Tracking one order (SA §4.2.4).
+  static const orderPattern = '/order/:orderId';
+  static String order(int orderId) => '/order/$orderId';
+
+  /// Success or failure (SA §4.2.3.4). Needs a PaymentOutcome as `extra`.
+  static const paymentResult = '/pay/result';
+
+  /// Login for a guest who must sign in first (BR-06, TC-18); afterwards
+  /// the app goes to [path].
+  static String loginThenReturnTo(String path) =>
+      '$login?from=${Uri.encodeQueryComponent(path)}';
+
+  /// Checkout, payment, order and account pages: signed-in customers only
+  /// (BR-06; guests have no account to edit).
+  static bool isOrdering(String location) =>
+      location == checkout ||
+      location.startsWith('/pay/') ||
+      location.startsWith('/order/') ||
+      location.startsWith('/account/');
+
   /// Pages for people who are not signed in. Everything else needs a
   /// session (customer or guest).
   static const authPages = {login, signUp, forgotPassword, resetPassword};

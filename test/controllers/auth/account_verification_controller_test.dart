@@ -11,7 +11,7 @@ void main() {
   AccountVerification state() => container.read(accountVerificationProvider);
 
   setUp(() {
-    container = ProviderContainer.test(overrides: mockOverrides());
+    container = ProviderContainer.test(overrides: testBackend().overrides);
     // Keep the auto-dispose provider alive for the whole test.
     container.listen(accountVerificationProvider, (_, _) {});
   });
