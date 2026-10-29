@@ -147,6 +147,8 @@ void main() {
       '10:27 AM',
     ]);
     expect(p.steps.every((s) => s.state == StepState.done), isTrue);
+    // Not "show this code when your order is ready": it is gone.
+    expect(p.pickupHint, 'This order has been picked up.');
   });
 
   test('Cancelled (TC-25): red card, stopped at step 2, refund', () {
@@ -225,10 +227,17 @@ void main() {
     );
     expect(of(o).summary, r'1 item · $3.50 · Refunded');
     final refund = RefundInfo.of(o)!;
-    expect(
-      refund.where,
-      'Back to your card, usually within 1–3 business days.',
-    );
+    // Already back: no "usually within..." for money that has arrived.
+    expect(refund.where, 'Returned to your card.');
     expect(refund.isDone, isTrue);
+  });
+
+  test('a refunded KHQR payment says it is back', () {
+    final o = placed.copyWith(
+      status: OrderStatus.cancelled,
+      endedAt: at(10, 14),
+      payments: [paid.copyWith(status: PaymentStatus.refunded)],
+    );
+    expect(RefundInfo.of(o)!.where, 'Returned to your KHQR account.');
   });
 }

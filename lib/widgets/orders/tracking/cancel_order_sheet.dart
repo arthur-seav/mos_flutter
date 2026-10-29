@@ -16,12 +16,6 @@ class CancelOutcome {
   final String? message;
 }
 
-/// Where a refund goes: "to your card" for a card, "to your KHQR
-/// account" otherwise. Used by the sheet and the line above the button.
-String refundDestination(PaymentMethod? method) => method == PaymentMethod.card
-    ? 'to your card'
-    : 'to your ${(method ?? PaymentMethod.khqr).label} account';
-
 /// "Cancel this order?" (Figma: overlay-cancel_order, BR-09, TC-25).
 ///
 /// Returns null if the customer kept the order, or a [CancelOutcome]
@@ -111,7 +105,7 @@ class _CancelOrderSheet extends ConsumerWidget {
             const SizedBox(height: 8),
             Text(
               "The store hasn't started on it yet. You'll get a full refund "
-              'of $refundAmount ${refundDestination(method)}.',
+              'of $refundAmount to ${(method ?? PaymentMethod.khqr).refundAccount}.',
               style: AppTextStyles.body.copyWith(
                 color: AppColors.textSecondary,
               ),
