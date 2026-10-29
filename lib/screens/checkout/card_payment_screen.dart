@@ -231,7 +231,7 @@ class _ReadOnlyField extends StatelessWidget {
 
 /// A saved card drawn as a mocha card (Figma "Card Information"); only the
 /// last four digits are shown, never the full number.
-class _CardTile extends StatelessWidget {
+class _CardTile extends StatefulWidget {
   const _CardTile({
     required this.card,
     required this.selected,
@@ -243,9 +243,41 @@ class _CardTile extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<_CardTile> createState() => _CardTileState();
+}
+
+class _CardTileState extends State<_CardTile> {
+  @override
+  void initState() {
+    super.initState();
+    // A card just added is selected but may be past the right edge.
+    if (widget.selected) _scrollIntoView();
+  }
+
+  @override
+  void didUpdateWidget(_CardTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selected && !oldWidget.selected) _scrollIntoView();
+  }
+
+  void _scrollIntoView() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        // Only scroll when it is cut off at the right; the first card
+        // keeps its left padding.
+        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+      );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Container(
         width: 280,
         margin: const EdgeInsets.only(right: 16),
@@ -253,7 +285,7 @@ class _CardTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.mocha,
           borderRadius: BorderRadius.circular(20),
-          border: selected
+          border: widget.selected
               ? Border.all(color: AppColors.caramel, width: 2)
               : null,
         ),
@@ -272,14 +304,14 @@ class _CardTile extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  card.brand,
+                  widget.card.brand,
                   style: AppTextStyles.body.copyWith(color: AppColors.onBrand),
                 ),
               ],
             ),
             const Spacer(),
             Text(
-              card.maskedNumber,
+              widget.card.maskedNumber,
               style: AppTextStyles.sectionTitle.copyWith(
                 color: AppColors.onBrand,
                 letterSpacing: 2,
@@ -290,11 +322,11 @@ class _CardTile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  (card.holderName ?? '').toUpperCase(),
+                  (widget.card.holderName ?? '').toUpperCase(),
                   style: AppTextStyles.body.copyWith(color: AppColors.onBrand),
                 ),
                 Text(
-                  card.expiry,
+                  widget.card.expiry,
                   style: AppTextStyles.body.copyWith(color: AppColors.onBrand),
                 ),
               ],

@@ -117,6 +117,17 @@ void main() {
     expect(find.byType(BottomSheet), findsNothing);
     expect(find.text('•••• •••• •••• 0002'), findsNWidgets(2));
     expect(find.text('•••• •••• •••• 4242'), findsOneWidget); // picture only
+    // The new card's picture scrolled fully into view (screen 412 wide).
+    final newCard = tester.getRect(
+      find
+          .ancestor(
+            of: find.text('•••• •••• •••• 0002').first,
+            matching: find.byType(GestureDetector),
+          )
+          .first,
+    );
+    expect(newCard.left, greaterThanOrEqualTo(0));
+    expect(newCard.right, lessThanOrEqualTo(412));
 
     await tester.tap(find.byTooltip('Pay'));
     await tester.pumpAndSettle();
