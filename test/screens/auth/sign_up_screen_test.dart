@@ -8,8 +8,6 @@ import 'package:mos_app/widgets/auth/auth_status_view.dart';
 import '../../helpers.dart';
 
 void main() {
-  Finder field(int index) => find.byType(TextFormField).at(index);
-
   Future<void> openSignUp(WidgetTester tester) async {
     await tester.tap(find.text('Create an account'));
     await tester.pumpAndSettle();
@@ -23,10 +21,10 @@ void main() {
     String phone = '',
     String password = 'longenough',
   }) async {
-    await tester.enterText(field(0), name);
-    await tester.enterText(field(1), email);
-    await tester.enterText(field(2), phone);
-    await tester.enterText(field(3), password);
+    await tester.enterText(fieldLabelled('Full name'), name);
+    await tester.enterText(fieldLabelled('Email'), email);
+    await tester.enterText(fieldLabelled('Phone number'), phone);
+    await tester.enterText(fieldLabelled('Password'), password);
   }
 
   Future<void> submit(WidgetTester tester) async {

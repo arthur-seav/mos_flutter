@@ -28,12 +28,9 @@ void main() {
 
   testWidgets('a customer sees their first name', (tester) async {
     await pumpMosApp(tester);
+    await tester.enterText(fieldLabelled('Email'), 'dara@example.com');
     await tester.enterText(
-      find.byType(TextFormField).at(0),
-      'dara@example.com',
-    );
-    await tester.enterText(
-      find.byType(TextFormField).at(1),
+      fieldLabelled('Password'),
       MockAuthRepository.demoPassword,
     );
     await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));

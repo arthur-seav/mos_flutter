@@ -77,8 +77,8 @@ void main() {
     await verifyPhone(tester, '012 345 678');
     expect(find.byType(ResetPasswordScreen), findsOneWidget);
 
-    await tester.enterText(find.byType(TextFormField).at(0), 'brand-new-pw');
-    await tester.enterText(find.byType(TextFormField).at(1), 'different-pw');
+    await tester.enterText(fieldLabelled('New password'), 'brand-new-pw');
+    await tester.enterText(fieldLabelled('Confirm password'), 'different-pw');
     await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
     await tester.pumpAndSettle();
     expect(find.text('Passwords do not match.'), findsOneWidget);
@@ -91,8 +91,8 @@ void main() {
       await openForgotPassword(tester);
       await verifyPhone(tester, '012 345 678');
 
-      await tester.enterText(find.byType(TextFormField).at(0), 'brand-new-pw');
-      await tester.enterText(find.byType(TextFormField).at(1), 'brand-new-pw');
+      await tester.enterText(fieldLabelled('New password'), 'brand-new-pw');
+      await tester.enterText(fieldLabelled('Confirm password'), 'brand-new-pw');
       await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
       // Let the (zero-latency) mock answer, then draw the next frame.
       await tester.pump(const Duration(milliseconds: 10));
@@ -105,9 +105,9 @@ void main() {
       expect(find.byType(AuthStatusView), findsNothing);
 
       // Old password refused.
-      await tester.enterText(find.byType(TextFormField).at(0), '012345678');
+      await tester.enterText(fieldLabelled('Email'), '012345678');
       await tester.enterText(
-        find.byType(TextFormField).at(1),
+        fieldLabelled('Password'),
         MockAuthRepository.demoPassword,
       );
       await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
@@ -115,7 +115,7 @@ void main() {
       expect(find.text('Incorrect email/phone or password.'), findsOneWidget);
 
       // New password accepted.
-      await tester.enterText(find.byType(TextFormField).at(1), 'brand-new-pw');
+      await tester.enterText(fieldLabelled('Password'), 'brand-new-pw');
       await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
       await tester.pumpAndSettle();
       expect(container.read(authControllerProvider).isCustomer, isTrue);
