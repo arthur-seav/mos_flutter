@@ -11,6 +11,9 @@ import '../../theme/app_text_styles.dart';
 Future<void> showHelpSupportSheet(BuildContext context) =>
     showModalBottomSheet<void>(
       context: context,
+      // Opened from the Profile tab: cover the tab bar too, so the tabs
+      // cannot be switched under an open sheet.
+      useRootNavigator: true,
       backgroundColor: AppColors.canvas,
       showDragHandle: true,
       shape: const RoundedRectangleBorder(
