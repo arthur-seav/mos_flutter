@@ -13,14 +13,29 @@ The requirements and design are in the SA document `Mobile-Ordering-System_2.0` 
 
 ## Run
 
+The app talks to the **MOS Spring Boot backend** (repo `arthur-seav/mos_management`), the same server the store dashboard uses. Start the backend first (its README: Docker PostgreSQL, `./mvnw package`, `java -jar ...`; it listens on port 8080), then:
+
 ```bash
 flutter pub get
-flutter run              # pick an Android emulator / device
+flutter run              # Android emulator: reaches the computer's backend at http://10.0.2.2:8080
+flutter run -d chrome    # browser preview: http://localhost:8080
 flutter test             # unit and widget tests
 flutter analyze          # lints
 ```
 
-To preview in a browser: `flutter run -d chrome`.
+| Where the app runs | Command |
+|---|---|
+| Android emulator, Chrome, desktop | `flutter run` (default address above) |
+| A real phone on the same Wi-Fi | `flutter run --dart-define=MOS_API_URL=http://<computer's LAN IP>:8080` (allow port 8080 in the computer's firewall) |
+| No backend at all (demo data, "Demo: staff" panel) | `flutter run --dart-define=MOS_BACKEND=mock` |
+
+- Debug builds may use plain `http://` to the dev backend (Android `usesCleartextTraffic` in the debug manifest only); a release build needs an `https://` backend.
+- The browser preview runs on its own port, so the backend allows cross-origin calls to `/api/app/**` from `localhost` / `127.0.0.1` (`mos.cors.app-origins` in its `application.properties`).
+- Sign-in lasts until the app closes (the token is kept in memory, as the mock did); after a restart the customer signs in again.
+- Demo menu and staff accounts come from the backend's seed, not from this app. Customers sign up in the app.
+- Orders now move on when the store dashboard moves them (Confirm → Start preparing → Mark ready → Picked up); the "Demo: staff" button and the automatic staff timings below exist only in mock mode.
+
+**Cross-end check against a real backend** (writes data: use a throwaway, freshly seeded database): `MOS_LIVE_API=http://127.0.0.1:8092 MOS_LIVE_STAFF_PASSWORD=... flutter test test/live --tags live`. It signs up a customer, orders TC-14's $9.20 drinks, pays by (simulated) KHQR, has staff confirm and start preparing through the dashboard API, checks the app sees it, then pauses online ordering and checks the app is refused (TC-20). It is skipped in a normal `flutter test`.
 
 ## Packages
 
@@ -28,6 +43,7 @@ To preview in a browser: `flutter run -d chrome`.
 |---|---|
 | `flutter_riverpod` 3.3.x | State management. 3.3.x is the newest line that supports Dart 3.11. |
 | `go_router` 17.x | Routing, bottom tabs, redirect to login when there is no session. |
+| `http` 1.6.x | Calls to the backend API (`lib/data/api/api_client.dart`). Maintained by the Dart team (dart.dev); `package:http/testing.dart` lets tests answer with recorded backend responses. |
 | `dotted_border` | The dashed "Add more items" outline in the cart (Flutter has no dashed border). |
 | `email_validator` | Email format check. |
 | `intl` | Price formatting (`$3.50`). |
@@ -47,7 +63,7 @@ Folders are split by **layer** first, then by feature inside each layer.
 
 ```
 lib/
-├── main.dart            # entry point; chooses mock or API repositories (NFR-09)
+├── main.dart            # entry point; API repositories by default, mock with MOS_BACKEND=mock (NFR-09)
 ├── app.dart             # MaterialApp + theme + router
 ├── app_routes.dart      # route paths
 ├── router.dart          # all routes + login redirect (go_router)
@@ -75,7 +91,7 @@ lib/
 
 ### How the layers talk
 
-`Screen` → `AuthController` (Riverpod `Notifier`) → `AuthRepository` interface → `MockAuthRepository` today, `ApiAuthRepository` later.
+`Screen` → `AuthController` (Riverpod `Notifier`) → `AuthRepository` interface → `ApiAuthRepository` (backend, `lib/data/api/`) or `MockAuthRepository` (demo data).
 
 - Screens read state with `ref.watch(authControllerProvider)` and call actions through `ref.read(authControllerProvider.notifier)`.
 - `main.dart` picks the repository with `ProviderScope(overrides: ...)`; tests pass a zero-latency mock the same way. Switching to the real API does not touch any screen.
