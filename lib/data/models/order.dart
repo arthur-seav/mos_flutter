@@ -33,6 +33,10 @@ enum PaymentMethod {
 
   /// "KHQR", "Card".
   final String label;
+
+  /// Where a refund goes (BR-10): "your card", "your KHQR account".
+  String get refundAccount =>
+      this == PaymentMethod.card ? 'your card' : 'your $label account';
 }
 
 /// `payments.status`.

@@ -188,9 +188,12 @@ class OrderProgress {
       tone: tone,
       filledSegments: filled,
       steps: steps,
-      pickupHint: order.status == OrderStatus.ready
-          ? 'Show this code at the counter now. Your drinks are waiting.'
-          : 'Show this code at the counter when your order is ready.',
+      pickupHint: switch (order.status) {
+        OrderStatus.ready =>
+          'Show this code at the counter now. Your drinks are waiting.',
+        OrderStatus.completed => 'This order has been picked up.',
+        _ => 'Show this code at the counter when your order is ready.',
+      },
       summary: '$items · $money · $payment',
     );
   }
@@ -242,13 +245,15 @@ class RefundInfo {
   static RefundInfo? of(Order order) {
     final p = order.paidPayment;
     if (!order.endedEarly || p == null || !p.isRefund) return null;
+    final account = p.method.refundAccount;
+    final isDone = p.status == PaymentStatus.refunded;
     return RefundInfo(
       amount: p.amount.format(),
-      where: p.method == PaymentMethod.card
-          ? 'Back to your card, usually within 1–3 business days.'
-          : 'Back to your ${p.method.label} account, usually within 1–3 '
-                'business days.',
-      isDone: p.status == PaymentStatus.refunded,
+      // Once it is back, no "usually within..." for money that arrived.
+      where: isDone
+          ? 'Returned to $account.'
+          : 'Back to $account, usually within 1–3 business days.',
+      isDone: isDone,
     );
   }
 

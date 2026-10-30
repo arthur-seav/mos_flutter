@@ -7,8 +7,8 @@ import 'package:mos_app/screens/auth/login_screen.dart';
 import '../../helpers.dart';
 
 void main() {
-  Finder emailField() => find.byType(TextFormField).at(0);
-  Finder passwordField() => find.byType(TextFormField).at(1);
+  Finder emailField() => fieldLabelled('Email');
+  Finder passwordField() => fieldLabelled('Password');
 
   testWidgets('the app opens on the login page', (tester) async {
     await pumpMosApp(tester);

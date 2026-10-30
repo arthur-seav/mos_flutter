@@ -189,7 +189,8 @@ class _BottomActions extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final List<Widget> children;
     if (order.canCancel) {
-      final where = refundDestination(order.paidPayment?.method);
+      final where =
+          'to ${(order.paidPayment?.method ?? PaymentMethod.khqr).refundAccount}';
       children = [
         Text(
           'You can cancel until the store confirms. Refunds go back '

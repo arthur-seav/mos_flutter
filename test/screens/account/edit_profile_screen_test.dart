@@ -127,6 +127,19 @@ void main() {
     );
   });
 
+  testWidgets('a badly typed phone number is refused before saving', (
+    tester,
+  ) async {
+    final container = await openEditProfile(tester);
+    await tester.enterText(fieldLabelled('Phone Number'), '12');
+    await tester.tap(find.byTooltip('Save'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enter a valid mobile number.'), findsOneWidget);
+    expect(find.byType(EditProfileScreen), findsOneWidget);
+    expect(container.read(authControllerProvider).user!.phone, '012345678');
+  });
+
   testWidgets('Cancel closes the page and keeps the old details', (
     tester,
   ) async {

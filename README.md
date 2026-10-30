@@ -35,8 +35,11 @@ To preview in a browser: `flutter run -d chrome`.
 | `pretty_qr_code` | Draws the KHQR code on the payment page and in the saved picture. |
 | `gal` | "Save QR to photos": writes the picture to the phone's photo library (Android / iOS; no web support, so the button is hidden on web). |
 | `screenshot` 3.0.x | Draws the saved KHQR picture (logo, QR, order, drinks, dates) off screen, without showing it on the page. Last release May 2024, but it works with the Flutter 3.41 render API and is widely used; Flutter itself can only capture widgets that are on screen. |
+| `shared_preferences` 2.5.x | Keeps the Profile page's **Notifications** switch on the phone (flutter.dev package). |
 
 Written by hand: card number (Luhn), expiry and CVV checks in `utils/card_validators.dart`. `credit_card_validator` was last released in 2023 for Dart 2, and `flutter_credit_card` brings its own card UI and native code that the Figma design does not need.
+
+Not used yet: `flutter_local_notifications` (system notifications). It needs Android Gradle changes (core library desugaring) that could not be checked here without the Android SDK, so order notices are shown inside the app for now (see *Deviations*).
 
 ## Project structure
 
@@ -49,22 +52,23 @@ lib/
 ├── app_routes.dart      # route paths
 ├── router.dart          # all routes + login redirect (go_router)
 ├── screens/             # full pages: they read controllers and draw, no logic
-│   ├── auth/  home/  menu/  cart/  orders/  account/   # menu/ includes customize_drink_screen
+│   ├── auth/  home/  menu/  cart/  checkout/  orders/  account/   # menu/ includes customize_drink_screen
 │   └── shell/           # bottom navigation (Home / Menu / Orders / Profile)
 ├── controllers/         # logic: Riverpod providers and Notifiers, no widgets
-│   ├── auth/  home/  menu/  cart/
+│   ├── auth/  home/  menu/  cart/  checkout/  orders/  account/
 │   └── common/          # SubmitStateMixin (loading / error for form buttons)
 ├── widgets/             # pieces of screens
 │   ├── common/          # used by several features (buttons, fields, empty state...)
-│   ├── auth/  menu/  cart/   # used by one feature's screens (menu widgets are also on Home)
+│   ├── auth/  menu/  cart/  checkout/  orders/  account/   # used by one feature's screens (menu widgets are also on Home)
 ├── data/
 │   ├── models/          # User, Product, Category, MenuCatalog, Money, DrinkOption,
 │   │                    # DrinkSelection (BR-01..03), CartItem ... (SA data dictionary)
 │   ├── repositories/    # abstract interfaces the UI depends on (NFR-09)
-│   ├── mock/            # in-memory implementations used until the backend exists
+│   ├── mock/            # in-memory implementations used until the backend exists,
+│   │                    # plus the demo staff (demo_staff.dart)
 │   └── repository_providers.dart
 ├── theme/               # SA 4.1 design guidelines: colors, text styles, ThemeData, scroll behaviour
-└── utils/               # form validators
+└── utils/               # form and card validators, time formatting, clock
 ```
 
 `test/` mirrors the same folders.
@@ -100,6 +104,12 @@ lib/
 | `widgets/cart/` | Cart line card and the Menu cart bar. |
 | `widgets/menu/` | Drink picture, add button / sold-out tag, category chips, search box, drink card and row (also used by Home). |
 | `widgets/auth/` | Auth-page pieces: back button, title, status page (success / verifying), footer link. |
+| `widgets/common/top_toast.dart` | Notice that slides in at the top ("Added to cart", order ready / rejected). |
+| `widgets/common/login_required_dialog.dart` | "Log in to order" question for guests (cart). |
+| `widgets/common/brand_mark.dart` | The MOS logo: auth pages and the saved KHQR picture. |
+| `utils/time_format.dart` | `formatClock` ("10:12 AM") and `formatDate`, with plain spaces (intl puts a narrow no-break space before AM/PM). |
+| `utils/clock.dart` | `clockProvider`: "now" for the whole app, so tests can fix the time. |
+| `widgets/orders/order_alert_host.dart` | Shows order notices (ready, rejected) on every page. |
 
 ## Demo accounts (mock data)
 
@@ -131,6 +141,16 @@ The mock backend works out every price from the menu and ignores any amount the 
 
 **Save QR to photos** (KHQR page) saves a picture, not just the code: the logo, order number, amount, QR code, when it expires, when the order was made, the pickup time and the drinks with their prices. Dates are written in full ("Thu, 29 Oct 2026"), and the file is named `MOS-KHQR-order<id>-<yyyyMMdd-HHmm>`, so an old picture can be told apart. The button only shows on Android / iOS (not on web). After pulling, run `flutter pub get` and restart the app fully: hot reload does not load the new native plugin.
 
+**Orders (mock).** With no backend, a pretend staff member moves each paid order along by the clock: confirmed 30 s after payment (time to try **Cancel order**), preparing 15 s later, ready 45 s after that, and picked up 1 min after ready (`StaffTimings` in `mock_order_repository.dart`). The tracking page asks for news every 3 seconds (NFR-02 asks for 5). For a demo, the **Demo: staff** button at the bottom of the tracking page does it by hand: confirm, start preparing, mark ready, picked up, or reject with "Sold out" (TC-24 to TC-27), and can pause the automatic staff. The button only exists with the mock backend; it disappears when the real API is used.
+
+- **Cancel** is offered only while the order is *Placed* (BR-09, TC-25). If staff confirm first, the app says so and keeps the order (TC-26).
+- A cancelled or rejected order that was paid shows its refund as *Processing* (`refund_pending`, BR-10).
+- When an order becomes *Ready* or is *Rejected* (with the reason), a notice slides in at the top of whatever page is open, with **View** to open it (FR-16, FR-38). The **Notifications** switch on the Profile page turns these off.
+- **Reorder** (Orders tab or a completed order) puts the same drinks and options in the cart at today's prices; sold-out drinks are left out and the app says which (TC-28).
+- Dara has three past orders: #A1019 (Mocha, sold out today, so reorder shows the message), #A1007 and the cancelled #A0998.
+
+**Profile.** Guests see only the Notifications switch and Help & support (store phone and today's hours from `store_settings` / `opening_hours`). Customers can edit their name, email, phone and date of birth (FR-04, TC-07; an email or a phone must stay, and neither may belong to another account), change their password (FR-30; the current one is checked first) and sign out.
+
 To try **Forgot password**, use `012 345 678` or `098 765 432`; any other number gives "Account not found." (TC-06).
 
 ## Open questions for the SA document
@@ -141,11 +161,16 @@ To try **Forgot password**, use `012 345 678` or `098 765 432`; any other number
 - **ASAP ready time.** Checkout says "Ready in about 10 min" (Figma). There is no field for it; the app adds `StoreSettings.asapPrepMin`.
 - **Card holder name.** Figma shows the holder's name on a saved card; `saved_cards` has no column for it. The app keeps `SavedCard.holderName`.
 - **Why a payment failed.** The failure screen says why ("Your card was declined.", "The QR code expired…"). `payments` has no column for it; the app reads `Payment.failureReason` from the gateway's reply.
+- **Notifications switch (SA 4.2.5.2).** The Profile page has the switch, but `users` has no column for it. The app keeps it on the phone; if it should follow the account to another phone, `users` needs a `notifications_enabled` column.
 - **Options a drink does not offer (TC-10: Espresso is Hot only).** `product_options` is described as a price override only. The app also reads it as "the options this drink offers" when a drink has rows for a group.
 
 ## Deviations from SA 2.0
 
 - **Pickup lead time (BR-07).** SA 2.0 says a scheduled slot must be at least 30 minutes after the order (`store_settings.min_prep_min`, default 30). The demo store uses **5 minutes**, with slots every 10 minutes (Arthur's decision, 2026-10-29). Only the mock data changed: the app reads both values from `store_settings`, so a store set to 30 / 15 behaves as SA 2.0 says (tested in `test/data/pickup_schedule_test.dart`). The schedule panel shows the next 6 times instead of the whole day; SA 2.0 does not fix a number. The SA document should be updated, or the store reset to 30.
+
+- **Name field on Edit Personal Info.** Figma labels it "Nickname"; the data is `first_name` / `last_name`, so the field is **Full name**, as on Sign up.
+- **Orders tab with no orders.** Figma says "Order Not Found / It seem likes you haven't process any order yet." The app says "No orders yet / Your orders will show up here.", which does not read like an error.
+- **Notifications (FR-16, FR-38).** Shown inside the app while it is open, on any page. Notices while the app is closed need push messages from the backend (FCM), which is out of scope for this client; phone system notifications (`flutter_local_notifications`) are not added yet (see *Packages*).
 
 ## Fonts
 

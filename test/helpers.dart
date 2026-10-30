@@ -12,6 +12,8 @@ import 'package:mos_app/data/models/drink_option.dart';
 import 'package:mos_app/data/models/product_customization.dart';
 import 'package:mos_app/data/repositories/menu_repository.dart';
 import 'package:mos_app/data/repositories/settings_repository.dart';
+import 'package:mos_app/screens/checkout/checkout_screen.dart';
+import 'package:mos_app/widgets/common/labeled_text_field.dart';
 
 /// Thursday 29 October 2026, 10:12 AM: the store (7 AM - 9 PM) is open,
 /// so ASAP works and the first pickup slot is 10:20 (BR-07, 5 min lead).
@@ -95,13 +97,39 @@ Future<void> continueAsGuest(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// The text field under [label]: [LabeledTextField] draws the label in a
+/// [Text] above its [TextFormField]. Finds by what the user reads, not
+/// by position, so adding a field cannot make a test type into the
+/// wrong one.
+Finder fieldLabelled(String label) => find.descendant(
+  of: find.widgetWithText(LabeledTextField, label),
+  matching: find.byType(TextFormField),
+);
+
 /// Fills in and submits the login page as the demo customer Dara.
 Future<void> signInAsDara(WidgetTester tester) async {
-  await tester.enterText(find.byType(TextFormField).at(0), 'dara@example.com');
+  await tester.enterText(fieldLabelled('Email'), 'dara@example.com');
   await tester.enterText(
-    find.byType(TextFormField).at(1),
+    fieldLabelled('Password'),
     MockAuthRepository.demoPassword,
   );
   await tester.tap(find.text('Sign in'));
   await tester.pumpAndSettle();
+}
+
+/// Home -> Caramel Latte (defaults, $4.00) -> Add to cart -> cart ->
+/// Go to checkout. Signed in first, so checkout opens straight away.
+Future<void> orderCaramelLatte(WidgetTester tester) async {
+  await tester.tap(find.byTooltip('Add Caramel Latte'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(r'Add to cart · $4.00'));
+  await tester.pumpAndSettle();
+  // The "Added to cart" notice covers the cart button until it closes.
+  await tester.pump(const Duration(seconds: 5));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byTooltip('Cart'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Go to checkout'));
+  await tester.pumpAndSettle();
+  expect(find.byType(CheckoutScreen), findsOneWidget);
 }

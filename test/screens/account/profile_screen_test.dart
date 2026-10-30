@@ -97,6 +97,10 @@ void main() {
 
     expect(find.byType(BottomSheet), findsOneWidget);
     expect(find.text('Help & Support'), findsOneWidget);
+    // Over the whole screen, tabs included: the sheet reaches the bottom
+    // edge (917) instead of stopping above the navigation bar, so the
+    // tabs cannot be tapped while it is open.
+    expect(tester.getRect(find.byType(BottomSheet)).bottom, 917);
   });
 
   testWidgets('"Order history" switches to the orders tab', (tester) async {

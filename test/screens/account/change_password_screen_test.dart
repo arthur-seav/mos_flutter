@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mos_app/controllers/auth/auth_controller.dart';
@@ -9,18 +8,10 @@ import 'package:mos_app/router.dart';
 import 'package:mos_app/screens/account/change_password_screen.dart';
 import 'package:mos_app/screens/account/profile_screen.dart';
 import 'package:mos_app/screens/auth/login_screen.dart';
-import 'package:mos_app/widgets/common/labeled_text_field.dart';
 
 import '../../helpers.dart';
 
 void main() {
-  /// The field under the given label: [LabeledTextField] draws the label
-  /// in a [Text] above its [TextFormField].
-  Finder fieldLabelled(String label) => find.descendant(
-    of: find.widgetWithText(LabeledTextField, label),
-    matching: find.byType(TextFormField),
-  );
-
   /// Signs in as Dara and opens Change Password from the Profile tab,
   /// so there is a page to come back to.
   Future<ProviderContainer> openChangePassword(
@@ -195,14 +186,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(LoginScreen), findsOneWidget);
 
-      await tester.enterText(
-        find.byType(TextFormField).at(0),
-        'dara@example.com',
-      );
-      await tester.enterText(
-        find.byType(TextFormField).at(1),
-        'brand-new-pass',
-      );
+      await tester.enterText(fieldLabelled('Email'), 'dara@example.com');
+      await tester.enterText(fieldLabelled('Password'), 'brand-new-pass');
       await tester.tap(find.text('Sign in'));
       await tester.pumpAndSettle();
 
