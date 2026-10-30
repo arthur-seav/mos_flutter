@@ -25,7 +25,12 @@ class ProductTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          ProductImage(width: 72, height: 72, dimmed: soldOut),
+          ProductImage(
+            imageUrl: product.imageUrl,
+            width: 72,
+            height: 72,
+            dimmed: soldOut,
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(

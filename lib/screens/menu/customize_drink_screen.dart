@@ -99,7 +99,12 @@ class _Details extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const ProductImage(height: 290, radius: 0, iconSize: 96),
+          ProductImage(
+            imageUrl: product.imageUrl,
+            height: 290,
+            radius: 0,
+            iconSize: 96,
+          ),
           // The content sheet overlaps the picture by its rounded corners.
           Transform.translate(
             offset: const Offset(0, -28),

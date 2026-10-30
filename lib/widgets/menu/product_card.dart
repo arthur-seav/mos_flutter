@@ -26,6 +26,7 @@ class ProductCard extends StatelessWidget {
         children: [
           Expanded(
             child: ProductImage(
+              imageUrl: product.imageUrl,
               width: double.infinity,
               iconSize: 40,
               dimmed: product.isSoldOut,
