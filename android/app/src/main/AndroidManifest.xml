@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The app talks to the MOS backend. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <!-- gal: "Save QR to photos" on Android 10 (API 29), our minSdk. -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29" />
